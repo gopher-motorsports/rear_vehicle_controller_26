@@ -22,6 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "rvc.h"
 #include "GopherCAN.h"
 #include "gopher_sense.h"
 /* USER CODE END Includes */
@@ -108,7 +109,8 @@ int main(void)
   MX_CAN2_Init();
   MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
-
+  init(&hcan2);
+  gsense_init(&hcan2, &hadc1, NULL, NULL, &htim10, Gsense_GPIO_Port, Gsense_Pin);
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */

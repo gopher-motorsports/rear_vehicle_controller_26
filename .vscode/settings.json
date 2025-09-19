@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "rvc.h": "c",
+        "gophercan.h": "c"
+    }
+}
