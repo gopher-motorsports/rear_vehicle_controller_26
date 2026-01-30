@@ -1,0 +1,1 @@
+// Set up header file for Efuse with function prorotypes and variables as needed
