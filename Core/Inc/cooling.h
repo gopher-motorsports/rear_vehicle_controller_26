@@ -1,0 +1,1 @@
+// setup this header file with prototypes and variables necessary
