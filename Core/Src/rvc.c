@@ -77,3 +77,6 @@ void init_error(void)
 		HAL_Delay(250);
 	}
 }
+
+// Port over Buzzer & BrakeLight Code from RVC 2025
+// Buzzer should be active when inverters are in predrive, brake light should be active about a PSI threshold (~25psi)
