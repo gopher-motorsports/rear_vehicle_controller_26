@@ -1,6 +1,7 @@
 module_name: "rvc"
 
 # NOTE: Frequencies will be converted to an integer number of ms for a delay
+# TODO: DELETE COMMENTING AFTER EDITING - change bucket frequencies to 250Hz, 50 Hz, and 10Hz
 
 buckets:
     high_frequency_ADCs:

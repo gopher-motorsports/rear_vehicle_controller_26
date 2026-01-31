@@ -90,6 +90,37 @@ void init_error(void)
 	}
 }
 
+// #TODO: write a function that sends highly important signals @ 250 Hz, medium important signals @ 50 Hz, and low importance signals @ 10 Hz
+// This one ain't to deep just call update_and_queue_u8(), update_and_queue_u16(), update_and_queue_float() on everything
+// You can actually just run this function in the main_loop() called at 1ms
+// Make sure you are passing in global vairables to this file not the .data of the variable, that will send the parameter super slow (2.5s)
+// For ADC parameters you can ignore having to call "update_and_queue()" specifically as Gsense does it in the backend
+void update_telemtry_params(){
+	// BSPD Faults
+
+	// Efuse Sensor Power Faults (Not the fault pins, but if sensor power is disabled)
+
+	// Cooling Power (Pump, Radiator Fan)
+
+	// Status(Hbeat, Brake Light, Buzzer)
+}
+
+
+// #TODO: write a function that sends highly important signals @ 250 Hz, medium important signals @ 50 Hz, and low importance signals @ 10 Hz
+// This one ain't to deep just call update_and_queue_u8(), update_and_queue_u16(), update_and_queue_float() on everything
+// You can actually just run this function in the main_loop() called at 1ms
+// Make sure you are passing in global vairables to this file not the .data of the variable, that will send the parameter super slow (2.5s)
+// For ADC parameters you can ignore having to call "update_and_queue()" specifically as Gsense does it in the backend
+void update_telemtry_params(){
+	// BSPD Faults
+
+	// Efuse Sensor Power Faults (Not the fault pins, but if sensor power is disabled)
+
+	// Cooling Power (Pump, Radiator Fan)
+
+	// Status(Hbeat, Brake Light, Buzzer)
+}
+
 // Port over Buzzer & BrakeLight Code from RVC 2025
 // Buzzer should be active when inverters are in predrive, brake light should be active about a PSI threshold (~25psi)
 void update_brakelight_and_buzzer(){
