@@ -14,6 +14,24 @@ uint8_t rvcBspdFaultLatched = 0;
 CAN_HandleTypeDef* example_hcan;
 #define PRINTF_HB_MS_BETWEEN 500
 
+
+//Cooling variables
+//Fan
+boolean steady_temperatures_achieved_fan[] = {true, true}; //LOT if fan temperatures have returned to steady state, implemented to stop double counting
+U8 fan_readings_below_HYS_threshold = 0;
+U8 rad_fan_state = RAD_FAN_OFF;
+
+//Pump
+TIM_HandleTypeDef* PUMP_PWM_Timer;
+U32 PUMP_Channel_1;
+U32 PUMP_Channel_2;
+float pump_percent;
+boolean steady_temperatures_achieved_pump[] = {true, true}; //LOT if pump temperatures have returned to ready state
+U8 pump_readings_below_HYS_threshold = 0;
+
+U8 digital_pump_state = PUMP_DIGITAL_OFF; //if no pump pwm and just digital
+
+
 // the CAN callback function used in this example
 static void change_led_state(U8 sender, U8 remote_param, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3);
 static void init_error(void);
@@ -88,6 +106,32 @@ void init_error(void)
 	}
 }
 
+void init_Pump(TIM_HandleTypeDef* timer_address, U32 channel){
+	PUMP_PWM_Timer = timer_address;
+	PUMP_Channel = channel;
+	HAL_TIM_PWM_Start(PUMP_PWM_Timer, PUMP_Channel); //turn on PWM generation
+}
+
+void update_cooling_basic() {
+	//motor_mph = electricalRPM_erpm.data * DRIVE_RATIO;
+	float inv_temp = fvcControllerTemp_C.data;
+	float motor_temp = fvcMotorTemp_C.data;
+
+	if ((inv_temp > INVERTER_PUMP_POWER_ON_THRESH) || (motor_temp > MOTOR_PUMP_THRESH_C)) {
+			digital_pump_state = PUMP_DIGITAL_ON;
+	} else if ((inv_temp < INVERTER_PUMP_POWER_ON_THRESH - COOLING_HYSTERESIS_C) && (motor_temp < MOTOR_PUMP_THRESH_C - COOLING_HYSTERESIS_C)) {
+			digital_pump_state = PUMP_DIGITAL_OFF;
+	}
+
+	//radiator fan
+	if ((inv_temp > INVERTER_FAN_THRESH_C) || (motor_temp > MOTOR_FAN_THRESH_C)) {
+			rad_fan_state = RAD_FAN_ON;
+	} else if ((inv_temp < INVERTER_FAN_THRESH_C - COOLING_HYSTERESIS_C) && (motor_temp < MOTOR_FAN_THRESH_C - COOLING_HYSTERESIS_C)) {
+			rad_fan_state = RAD_FAN_OFF;
+	}
+
+	HAL_GPIO_WritePin(PUMP_OUTPUT_GPIO_Port, PUMP_OUTPUT_Pin, digital_pump_state);
+}
 // Port over Buzzer & BrakeLight Code from RVC 2025
 // Buzzer should be active when inverters are in predrive, brake light should be active about a PSI threshold (~25psi)
 void update_brakelight_and_buzzer(){
