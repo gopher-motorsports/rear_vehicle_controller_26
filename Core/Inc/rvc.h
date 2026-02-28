@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "GopherCAN.h"
+#include "cooling.h"
 #include <stdio.h>
 
 // ====================================== PULLUP PARAMETERS =====================================

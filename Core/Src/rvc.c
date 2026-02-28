@@ -1,4 +1,5 @@
 #include "rvc.h"
+#include "cooling.c"
 
 
 //Current Sensing Variables:
@@ -13,23 +14,6 @@ uint8_t rvcBspdFaultLatched = 0;
 // the HAL_CAN struct. This example only works for a single CAN bus
 CAN_HandleTypeDef* example_hcan;
 #define PRINTF_HB_MS_BETWEEN 500
-
-
-//Cooling variables
-//Fan
-boolean steady_temperatures_achieved_fan[] = {true, true}; //LOT if fan temperatures have returned to steady state, implemented to stop double counting
-U8 fan_readings_below_HYS_threshold = 0;
-U8 rad_fan_state = RAD_FAN_OFF;
-
-//Pump
-TIM_HandleTypeDef* PUMP_PWM_Timer;
-U32 PUMP_Channel_1;
-U32 PUMP_Channel_2;
-float pump_percent;
-boolean steady_temperatures_achieved_pump[] = {true, true}; //LOT if pump temperatures have returned to ready state
-U8 pump_readings_below_HYS_threshold = 0;
-
-U8 digital_pump_state = PUMP_DIGITAL_OFF; //if no pump pwm and just digital
 
 
 // the CAN callback function used in this example

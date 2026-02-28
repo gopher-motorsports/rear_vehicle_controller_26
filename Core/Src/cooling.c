@@ -1,3 +1,136 @@
 // Write 2 functions:
 // one that turns on/off the pumps & fans with some hysteresis
 // one that turns uses PWM togive variable fan & pump speed with P control (might need a helper function for this)
+//Cooling variables
+#include "cooling.h"
+
+//Fan
+U8 rad_fan_0_state = RAD_FAN_OFF;
+U8 rad_fan_1_state = RAD_FAN_OFF;
+
+TIM_HandleTypeDef* FAN_PWM_Timer_0;
+TIM_HandleTypeDef* FAN_PWM_Timer_1;
+U32 FAN_Channel_0;
+U32 FAN_Channel_1;
+float fan_percent;
+
+//Pump
+boolean steady_temperatures_achieved_pump[] = {true, true}; //LOT if pump temperatures have returned to ready state
+U8 pump_readings_below_HYS_threshold = 0;
+
+U8 digital_pump_0_state = PUMP_DIGITAL_OFF; //if no pump pwm and just digital
+U8 digital_pump_1_state = PUMP_DIGITAL_OFF; //if no pump pwm and just digital
+
+TIM_HandleTypeDef* PUMP_PWM_Timer_0;
+TIM_HandleTypeDef* PUMP_PWM_Timer_1;
+U32 PUMP_Channel_0;
+U32 PUMP_Channel_1;
+float pump_percent;
+
+
+void init_Pump(TIM_HandleTypeDef* timer_address_0, TIM_HandleTypeDef* timer_address_1, U32 channel_0, U32 channel_1){
+	PUMP_PWM_Timer_0 = timer_address_0;
+	PUMP_PWM_Timer_1= timer_address_1;
+	PUMP_Channel_0 = channel_0;
+	PUMP_Channel_1 = channel_1;
+	HAL_TIM_PWM_Start(PUMP_PWM_Timer_0, PUMP_Channel_0); //turn on PWM generation
+	HAL_TIM_PWM_Start(PUMP_PWM_Timer_1, PUMP_Channel_1); //turn on PWM generation
+}
+
+void init_Fan(TIM_HandleTypeDef* timer_address_0, TIM_HandleTypeDef* timer_address_1, U32 channel_0, U32 channel_1){
+	FAN_PWM_Timer_0 = timer_address_0;
+	FAN_PWM_Timer_1 = timer_address_1;
+	FAN_Channel_0 = channel_0;
+	FAN_Channel_1 = channel_1;
+	HAL_TIM_PWM_Start(FAN_PWM_Timer_0, FAN_Channel_0); //turn on PWM generation
+	HAL_TIM_PWM_Start(FAN_PWM_Timer_1, FAN_Channel_0)
+}
+
+void update_cooling_simple() {
+	//motor_mph = electricalRPM_erpm.data * DRIVE_RATIO;
+	float inv_temp = fvcControllerTemp_C.data;
+	float motor_temp = fvcMotorTemp_C.data;
+
+	if ((inv_temp > INVERTER_PUMP_POWER_ON_THRESH) || (motor_temp > MOTOR_PUMP_THRESH_C)) {
+			digital_pump_0_state = PUMP_DIGITAL_ON;
+			digital_pump_1_state = PUMP_DIGITAL_ON;
+	} else if ((inv_temp < INVERTER_PUMP_POWER_ON_THRESH - COOLING_HYSTERESIS_C) && (motor_temp < MOTOR_PUMP_THRESH_C - COOLING_HYSTERESIS_C)) {
+			digital_pump_0_state = PUMP_DIGITAL_OFF;
+			digital_pump_1_state = PUMP_DIGITAL_OFF;
+	}
+
+	//radiator fan
+	if ((inv_temp > INVERTER_FAN_THRESH_C) || (motor_temp > MOTOR_FAN_THRESH_C)) {
+			rad_fan_0_state = RAD_FAN_ON;
+			rad_fan_1_state = RAD_FAN_ON;
+	} else if ((inv_temp < INVERTER_FAN_THRESH_C - COOLING_HYSTERESIS_C) && (motor_temp < MOTOR_FAN_THRESH_C - COOLING_HYSTERESIS_C)) {
+			rad_fan_0_state = RAD_FAN_OFF;
+			rad_fan_1_state = RAD_FAN_OFF;
+	}
+
+	HAL_GPIO_WritePin(PUMP_PWM_1_GPIO_Port, PUMP_PWM_1_Pin, digital_pump_0_state);
+	HAL_GPIO_WritePin(PUMP_PWM_2_GPIO_Port, PUMP_PWM_2_Pin, digital_pump_1_state);
+	HAL_GPIO_WritePin(FAN_PWM_1_GPIO_Port, FAN_PWM_1_Pin, rad_fan_0_state);
+	HAL_GPIO_WritePin(FAN_PWM_2_GPIO_Port, FAN_PWM_1_Pin, rad_fan_1_state);
+}
+
+void update_cooling_dynamic(){
+	/*
+	/ figure out correct pump and fan frequency, configure pwm drivers to hit that frequency and be 
+	/ able to set a custom fan/pump threshold
+	/
+	/ use P control when temperature goes above a certain threshold to get back down to that threshold
+	/
+	/ set saturation limits for the output so that we can't command like "-10%" or "110%"
+	*/
+	float inv_temp = fvcControllerTemp_C.data;
+	float motor_temp = fvcMotorTemp_C.data;
+	pump_percent;
+	fan_percent;
+
+    //PI variables
+    float integral_error;
+    float total_error;
+
+	//determine if pump should be on, and what its percent should be with PI loop
+    float error_inv = inv_temp - INVERTER_PUMP_POWER_ON_THRESH;
+    float error_motor = motor_temp - MOTOR_PUMP_THRESH_C;
+    if (error_inv > 0 || error_motor > 0) {
+        //if either temperature is above threshold, turn on fan and calculate percent
+        total_error = error_inv + error_motor;
+        if(K_Porportional*total_error > 100){
+            integral_error = 0;             //prevents early integral windup
+        } else {
+            integral_error += total_error;              //update integral error
+        }
+
+        fan_percent = K_Porportional * total_error;     //percent is proportional term
+        fan_percent += K_Integral * integral_error;     //add integral term
+        pump_percent = fan_percent;
+        if (fan_percent > FAN_MAX_PERCENT) {
+            fan_percent = FAN_MAX_PERCENT;
+            pump_percent = PUMP_100_PERCENT;
+        } else if (fan_percent < FAN_MIN_PERCENT) {
+            fan_percent = FAN_MIN_PERCENT;
+        }
+    } 
+    else {
+        //if temps are below, turn off cooling after a delay
+        if(HAL_GetTick() - last_on > COOLING_OFF_DELAY_MS){
+            fan_percent = FAN_STATE_OFF;
+            pump_percent = PUMP_OFF;
+        }
+    }
+
+    //updates pwm signals
+    update_pwm(PUMP_PWM_Timer_0, PUMP_Channel_0, pump_percent);
+    update_pwm(PUMP_PWM_Timer_1, PUMP_Channel_1, pump_percent);
+    update_pwm(FAN_PWM_Timer_0, FAN_Channel_0, fan_percent);
+    update_pwm(FAN_PWM_Timer_1, FAN_Channel_1, fan_percent);
+}
+
+void update_pwm(TIM_HandleTypeDef* timer_address, U32 channel, float percent) {
+    //changes DUT to desired percent
+	int DUT = (int) percent;
+	__HAL_TIM_SET_COMPARE(timer_address, channel, DUT);
+}
