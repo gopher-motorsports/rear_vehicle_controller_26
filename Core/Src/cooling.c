@@ -15,8 +15,8 @@ U32 FAN_Channel_1;
 float fan_percent;
 
 //Pump
-boolean steady_temperatures_achieved_pump[] = {true, true}; //LOT if pump temperatures have returned to ready state
-U8 pump_readings_below_HYS_threshold = 0;
+// boolean steady_temperatures_achieved_pump[] = {true, true}; //LOT if pump temperatures have returned to ready state
+// U8 pump_readings_below_HYS_threshold = 0;
 
 U8 digital_pump_0_state = PUMP_DIGITAL_OFF; //if no pump pwm and just digital
 U8 digital_pump_1_state = PUMP_DIGITAL_OFF; //if no pump pwm and just digital
@@ -43,7 +43,7 @@ void init_Fan(TIM_HandleTypeDef* timer_address_0, TIM_HandleTypeDef* timer_addre
 	FAN_Channel_0 = channel_0;
 	FAN_Channel_1 = channel_1;
 	HAL_TIM_PWM_Start(FAN_PWM_Timer_0, FAN_Channel_0); //turn on PWM generation
-	HAL_TIM_PWM_Start(FAN_PWM_Timer_1, FAN_Channel_0)
+	HAL_TIM_PWM_Start(FAN_PWM_Timer_1, FAN_Channel_0);
 }
 
 void update_cooling_simple() {
@@ -89,16 +89,17 @@ void update_cooling_dynamic(){
 	fan_percent;
 
     //PI variables
+    U32 last_on = 0;
     float integral_error;
     float total_error;
 
 	//determine if pump should be on, and what its percent should be with PI loop
-    float error_inv = inv_temp - INVERTER_PUMP_POWER_ON_THRESH;
-    float error_motor = motor_temp - MOTOR_PUMP_THRESH_C;
+    float error_inv = inv_temp - INVERTER_FAN_THRESH_C;
+    float error_motor = motor_temp - MOTOR_FAN_THRESH_C;
     if (error_inv > 0 || error_motor > 0) {
         //if either temperature is above threshold, turn on fan and calculate percent
         total_error = error_inv + error_motor;
-        if(K_Porportional*total_error > 100){
+        if(K_Porportional * total_error > 100){
             integral_error = 0;             //prevents early integral windup
         } else {
             integral_error += total_error;              //update integral error
@@ -106,12 +107,17 @@ void update_cooling_dynamic(){
 
         fan_percent = K_Porportional * total_error;     //percent is proportional term
         fan_percent += K_Integral * integral_error;     //add integral term
-        pump_percent = fan_percent;
+        pump_percent = fan_percent * (MOTOR_FAN_THRESH_C/MOTOR_PUMP_THRESH_C);
         if (fan_percent > FAN_MAX_PERCENT) {
             fan_percent = FAN_MAX_PERCENT;
             pump_percent = PUMP_100_PERCENT;
         } else if (fan_percent < FAN_MIN_PERCENT) {
             fan_percent = FAN_MIN_PERCENT;
+        }
+        if(pump_percent > PUMP_100_PERCENT){
+            pump_percent = PUMP_100_PERCENT;
+        } else if (pump_percent < PUMP_OFF){
+            pump_percent = PUMP_OFF;
         }
     } 
     else {

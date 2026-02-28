@@ -48,7 +48,6 @@ typedef enum {
 
 void update_cooling_simple();   // Hysteresis cooling code (go4-25)
 void update_cooling_dynamic();  // Control loop for cooling
-void update_pump_pwm();
-void update_fan_pwm();
-void init_Pump(TIM_HandleTypeDef* timer_address, U32 channel);
-void init_Fan(TIM_HandleTypeDef* timer_address, U32 channel);// setup this header file with prototypes and variables necessary
+void update_pwm(TIM_HandleTypeDef* timer_address, U32 channel, float percent);
+void init_Pump(TIM_HandleTypeDef* timer_address_0, TIM_HandleTypeDef* timer_address_1, U32 channel_0, U32 channel_1);
+void init_Fan(TIM_HandleTypeDef* timer_address_0, TIM_HandleTypeDef* timer_address_1, U32 channel_0, U32 channel_1);
