@@ -6,10 +6,17 @@
 #include "main.h"
 #include "GopherCAN.h"
 
+
+#define NUM_OF_CHANNELS 3
+
 //states of efuse
 #define ENABLED 0
 #define TRIPPED 1
 #define SHUTDOWN 2
+
+//States of current types for current calculation
+#define TPS2552 0
+#define TPS259630 1
 
 
 typedef struct {
@@ -22,16 +29,23 @@ typedef struct {
     uint16_t flt_led_pin;
     ADC_TypeDef* curr_out_port;
     uint16_t curr_out_pin;
-    float curr_limit = 0.0;
-    uint8_t flt;
+    uint8_t enabled;
+    uint8_t adc_type;
+    float amp_max;
+    uint8_t flt_state;
+    uint32_t trip_start;
     uint32_t reset_delay_ms;
     uint8_t state;
     uint32_t last_update;
-    uint8_t flt_count;
-    uint8_t max_flt_count;                      //amount of retries before disabling
+    uint8_t overcurrent_count;
+    uint8_t max_overcurrent_count;                      //amount of retries before disabling
     U8_CAN_STRUCT* overcurrentparam;
     U8_CAN_STRUCT* overcurrentcountparam;
-} EFUSE_DATA;
+} RVC_POWER_CHANNEL;
 
+
+extern RVC_POWER_CHANNEL* POWER_CHANNELS[NUM_OF_CHANNELS];
+
+void update_efuse(RVC_POWER_CHANNEL* efuse);
 
 #endif /* INC_Efuse_H_ */
