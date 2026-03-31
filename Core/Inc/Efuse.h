@@ -47,5 +47,6 @@ typedef struct {
 extern RVC_POWER_CHANNEL* POWER_CHANNELS[NUM_OF_CHANNELS];
 
 void update_efuse(RVC_POWER_CHANNEL* efuse);
+float get_current(RVC_POWER_CHANNEL* efuse);
 
 #endif /* INC_Efuse_H_ */

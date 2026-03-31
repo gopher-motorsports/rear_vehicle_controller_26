@@ -92,8 +92,7 @@ buckets:
                 sensor: NON_ADC
                 samples_buffered: 1
             
-            # Misc Sensor Readings
-            rvcBrakeTempRearLeft_C: #Volt Sense 1
+            brakeTempRearLeft_C: #Volt Sense 1
                 ADC: ADC1_IN15
                 sensor: brake_temp_sensor
                 samples_buffered: 1

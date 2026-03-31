@@ -6,14 +6,14 @@ uint8_t SNS_5V_2_FLT;
 uint8_t SNS_12V_FLT;
 
 //Basic 5V Efuse setup
-RVC_POWER_CHANNEL* ch_5v_0 = {
+RVC_POWER_CHANNEL ch_5v_1 = {
     .parameter = &fiveVChan0Current_A,
-    .enable_fuse_port = SNS_5V_0_EN_GPIO_PORT,
-    .enable_fuse_pin = SNS_5V_0_EN_PIN,
-    .flt_out_port = SNS_5V_0_FLT_GPIO_PORT,
-    .flt_out_pin = SNS_5V_0_FLT_PIN,
-    .flt_led_port = FLT_5V_0_LED_GPIO_PORT,
-    .flt_led_pin = FLT_5V_0_LED_PIN,
+    .enable_fuse_port = SNS_5V_1_EN_GPIO_Port,
+    .enable_fuse_pin = SNS_5V_1_EN_Pin,
+    .flt_out_port = SNS_5V_1_FLT_GPIO_Port,
+    .flt_out_pin = SNS_5V_1_FLT_Pin,
+    .flt_led_port = FLT_5V_1_LED_GPIO_Port,
+    .flt_led_pin = FLT_5V_1_LED_Pin,
     .amp_max = 0.250f, //Done by hardware at 250mA
     .enabled = ENABLED,
     .adc_type = TPS2552,
@@ -22,17 +22,17 @@ RVC_POWER_CHANNEL* ch_5v_0 = {
     .last_update = 0,
     .overcurrent_count = 0,
     .max_overcurrent_count = 3,
-    .overcurrentparam = &RVC_5V_0_Overcurrent,
-	.overcurrentcountparam = &RVC_5V_0_Overcurrent_Count
+    .overcurrentparam = &efuseOvercurrentCount5V1,
+	.overcurrentcountparam = &efuseOvercurrentCount5V1_Count
 } ;
 
-RVC_POWER_CHANNEL* ch_5v_1 = {
-    .enable_fuse_port = SNS_5V_1_EN_GPIO_PORT,
-    .enable_fuse_pin = SNS_5V_1_EN_PIN,
-    .flt_out_port = SNS_5V_1_FLT_GPIO_PORT,
-    .flt_out_pin = SNS_5V_1_FLT_PIN,
-    .flt_led_port = FLT_5V_1_LED_GPIO_PORT,
-    .flt_led_pin = FLT_5V_1_LED_PIN,
+RVC_POWER_CHANNEL ch_5v_2 = {
+    .enable_fuse_port = SNS_5V_2_EN_GPIO_Port,
+    .enable_fuse_pin = SNS_5V_2_EN_Pin,
+    .flt_out_port = SNS_5V_2_FLT_GPIO_Port,
+    .flt_out_pin = SNS_5V_2_FLT_Pin,
+    .flt_led_port = FLT_5V_2_LED_GPIO_Port,
+    .flt_led_pin = FLT_5V_2_LED_Pin,
     .amp_max = 0.250f, //Done by hardware at 250mA
     .enabled = ENABLED,
     .adc_type = TPS2552,
@@ -41,19 +41,19 @@ RVC_POWER_CHANNEL* ch_5v_1 = {
     .last_update = 0,
     .overcurrent_count = 0,
     .max_overcurrent_count = 3,
-    .overcurrentparam = &RVC_5V_1_Overcurrent,
-    .overcurrentcountparam = &RVC_5V_1_Overcurrent_Count
+    .overcurrentparam = &efuseOvercurrentCount5V2,
+    .overcurrentcountparam = &efuseOvercurrentCount5V2_Count
 } ;
 
-RVC_POWER_CHANNEL* ch_12v_0 = {
-    .enable_fuse_port = SNS_12V_EN_GPIO_PORT,
-    .enable_fuse_pin = SNS_12V_EN_PIN,
-    .flt_out_port = SNS_12V_FLT_GPIO_PORT,
-    .flt_out_pin = SNS_12V_FLT_PIN,
-    .flt_led_port = FLT_12V_LED_GPIO_PORT,
-    .flt_led_pin = FLT_12V_LED_PIN,
+RVC_POWER_CHANNEL ch_12v_0 = {
+    .enable_fuse_port = SNS_12V_EN_GPIO_Port,
+    .enable_fuse_pin = SNS_12V_EN_Pin,
+    .flt_out_port = SNS_12V_FLT_GPIO_Port,
+    .flt_out_pin = SNS_12V_FLT_Pin,
+    .flt_led_port = FLT_12V_LED_GPIO_Port,
+    .flt_led_pin = FLT_12V_LED_Pin,
     .curr_out_port = SNS_12V_ILM_GPIO_Port,
-    .curr_out_pin = SNS_12V_ILM_PIN;
+    .curr_out_pin = SNS_12V_ILM_Pin,
     .amp_max = 0.6,
     .enabled = ENABLED,
     .adc_type = TPS259630,
@@ -62,18 +62,18 @@ RVC_POWER_CHANNEL* ch_12v_0 = {
     .last_update = 0,
     .overcurrent_count = 0,
     .max_overcurrent_count = 3,
-    .overcurrentparam = &RVC_12V_Overcurrent,
-    .overcurrentcountparam = &RVC_12V_Overcurrent_Count
+    .overcurrentparam = &efuseOvercurrentCount12V,
+    .overcurrentcountparam = &efuseOvercurrentCount12V_Count
 } ;
 
 RVC_POWER_CHANNEL* POWER_CHANNELS[NUM_OF_CHANNELS] = {
     &ch_12v_0,
-    &ch_5v_0,
-    &ch_5v_1
+    &ch_5v_1,
+    &ch_5v_2
 };
 
 
-void update_efuse(EFUSE_DATA* efuse) {
+void update_efuse(RVC_POWER_CHANNEL* efuse) {
     uint32_t tick = HAL_GetTick();
     efuse->last_update = tick;
 
@@ -128,7 +128,7 @@ void update_efuse(EFUSE_DATA* efuse) {
     }
 }
 
-void float get_current(EFUSE_DATA* efuse){
+float get_current(RVC_POWER_CHANNEL* efuse){
     if(efuse->curr_out_port != NULL){
         uint32_t adc_val = HAL_ADC_GetValue(efuse->curr_out_port);
         float current = adc_val;
