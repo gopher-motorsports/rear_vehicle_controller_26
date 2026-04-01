@@ -6,19 +6,19 @@ buckets:
     high_frequency_ADCs:
         frequency_hz: 250
         parameters:
-            brakePressureRear_psi:
+            rvcBrakePressureRear_psi:
                 ADC: ADC1_IN4
                 sensor: brake_pressure_sensor_rife
                 samples_buffered: 1
-            currentSensor_A:
+            rvcCurrentSensor_A:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            currentSensorStatus_state:
+            rvcCurrentSensorStatus_state:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            radWaterTempIn_C:
+            rvcRadWaterTempIn_C:
                 ADC: ADC1_IN11
                 sensor: temp_sensor
                 samples_buffered: 1
@@ -26,95 +26,85 @@ buckets:
     low_frequency:
         frequency_hz: 100
         parameters:
-            sdcStatus8:
+            rvcSdcStatus8:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            sdcStatus9:
+            rvcSdcStatus9:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
 
         # BSPD Faults
-            bspdBrakePressureSensorFault_state:
+            rvcBspdRunawayFault_state:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            bspdTractiveSystemCurrentSensorFault_state:
+            rvcBspdInputFault_state:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            bspdTractiveSystemBrakingFault_state:
+            rvcBspdFaultActive_state:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            bspdInputFault_state:
-                ADC: NON_ADC
-                sensor: NON_ADC
-                samples_buffered: 1
-            bspdFault_state:
+            rvcBspdFaultLatched_state:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
             
-            coolantFanPower_percent:
+            # RVC Controlled Outputs
+            rvcCoolantFanPower_percent:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            coolantPumpPower_percent:
+            rvcCoolantPumpPower_percent:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            brakeBias_percent:
+            rvcBrakeBias_percent:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1             
-            brakeLightOn_state:
+            rvcBrakeLightOn_state:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            vehicleBuzzerOn_state:
+            rvcVehicleBuzzerOn_state:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
             
-            brakeTempRearLeft_C: #Volt Sense 1
+            # Misc Sensor Readings
+            rvcBrakeTempRearLeft_C: #Volt Sense 1
                 ADC: ADC1_IN15
                 sensor: brake_temp_sensor
                 samples_buffered: 1
-            brakeTempRearRight_C: #Volt Sense 2
+            rvcBrakeTempRearRight_C: #Volt Sense 2
                 ADC: ADC1_IN6
                 sensor: brake_temp_sensor
                 samples_buffered: 1
-            shockPosRearLeft_mm: #Volt Sense 3
+            rvcShockPosRearLeft_mm: #Volt Sense 3
                 ADC: ADC1_IN0
                 sensor: linear_pos_sensor_50
                 samples_buffered: 1
-            shockPosRearRight_mm: #Volt Sense 4
+            rvcShockPosRearRight_mm: #Volt Sense 4
                 ADC: ADC1_IN5
                 sensor: linear_pos_sensor_50
                 samples_buffered: 1
-            rearRideHeight_mm:
+            rvcRearRideHeight_mm:
                 ADC: ADC1_IN9
                 sensor: full_raw_voltage_sensor # TODO make ride height sensor in gophersense
                 samples_buffered: 1
-            radWaterTempOut_C:
+            rvcRadWaterTempOut_C:
                 ADC: ADC1_IN10
                 sensor: temp_sensor
                 samples_buffered: 1
-            currentSensorLow_A:
+            rvcCurrentSensorLow_A:
                 ADC: ADC1_IN8
                 sensor: current_sensor_1
                 samples_buffered: 1
-            currentSensorHigh_A:
+            rvcCurrentSensorHigh_A:
                 ADC: ADC1_IN3
                 sensor: current_sensor_2
-                samples_buffered: 1
-            wheelSpeedRearLeft_mph: #pulse 2 = PE7 = MCU pin 38
-                ADC: NON_ADC
-                sensor: NON_ADC
-                samples_buffered: 1
-            wheelSpeedRearRight_mph: #pulse 3 = PB2 = MCU pin 37
-                ADC: NON_ADC
-                sensor: NON_ADC
                 samples_buffered: 1
