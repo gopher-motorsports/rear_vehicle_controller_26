@@ -7,7 +7,6 @@ uint8_t SNS_12V_FLT;
 
 //Basic 5V Efuse setup
 RVC_POWER_CHANNEL ch_5v_1 = {
-    .parameter = &fiveVChan0Current_A,
     .enable_fuse_port = SNS_5V_1_EN_GPIO_Port,
     .enable_fuse_pin = SNS_5V_1_EN_Pin,
     .flt_out_port = SNS_5V_1_FLT_GPIO_Port,
@@ -22,8 +21,8 @@ RVC_POWER_CHANNEL ch_5v_1 = {
     .last_update = 0,
     .overcurrent_count = 0,
     .max_overcurrent_count = 3,
-    .overcurrentparam = &efuseOvercurrentCount5V1,
-	.overcurrentcountparam = &efuseOvercurrentCount5V1_Count
+    .overcurrentparam = &rvc5V1Overcurrent,
+	.overcurrentcountparam = &rvc5V1Overcurrent_Count
 } ;
 
 RVC_POWER_CHANNEL ch_5v_2 = {
@@ -41,19 +40,18 @@ RVC_POWER_CHANNEL ch_5v_2 = {
     .last_update = 0,
     .overcurrent_count = 0,
     .max_overcurrent_count = 3,
-    .overcurrentparam = &efuseOvercurrentCount5V2,
-    .overcurrentcountparam = &efuseOvercurrentCount5V2_Count
+    .overcurrentparam = &rvc5V2Overcurrent,
+    .overcurrentcountparam = &rvc5V2Overcurrent_Count
 } ;
 
 RVC_POWER_CHANNEL ch_12v_0 = {
+    .currentparam = &rvc12VCurrent_A,
     .enable_fuse_port = SNS_12V_EN_GPIO_Port,
     .enable_fuse_pin = SNS_12V_EN_Pin,
     .flt_out_port = SNS_12V_FLT_GPIO_Port,
     .flt_out_pin = SNS_12V_FLT_Pin,
     .flt_led_port = FLT_12V_LED_GPIO_Port,
     .flt_led_pin = FLT_12V_LED_Pin,
-    .curr_out_port = SNS_12V_ILM_GPIO_Port,
-    .curr_out_pin = SNS_12V_ILM_Pin,
     .amp_max = 0.6,
     .enabled = ENABLED,
     .adc_type = TPS259630,
@@ -62,8 +60,8 @@ RVC_POWER_CHANNEL ch_12v_0 = {
     .last_update = 0,
     .overcurrent_count = 0,
     .max_overcurrent_count = 3,
-    .overcurrentparam = &efuseOvercurrentCount12V,
-    .overcurrentcountparam = &efuseOvercurrentCount12V_Count
+    .overcurrentparam = &rvc12VOvercurrent,
+    .overcurrentcountparam = &rvc12VOvercurrent_Count
 } ;
 
 RVC_POWER_CHANNEL* POWER_CHANNELS[NUM_OF_CHANNELS] = {
@@ -88,7 +86,9 @@ void update_efuse(RVC_POWER_CHANNEL* efuse) {
                         next_state = TRIPPED;
             }
             else{
-                float current = get_current(efuse);
+                if(efuse->currentparam->data > efuse->amp_max){
+                    next_state = TRIPPED;
+                }
             }
 
             if(next_state == TRIPPED){
@@ -126,19 +126,4 @@ void update_efuse(RVC_POWER_CHANNEL* efuse) {
             HAL_GPIO_WritePin(efuse->flt_led_port, efuse->flt_led_pin, 1);
             break;  
     }
-}
-
-float get_current(RVC_POWER_CHANNEL* efuse){
-    if(efuse->curr_out_port != NULL){
-        uint32_t adc_val = HAL_ADC_GetValue(efuse->curr_out_port);
-        float current = adc_val;
-        if(efuse->adc_type == TPS259630){ //placeholder calculation for 12V
-            current = current * 0.037f; //current calculation for TPS259630
-        }
-        else if(efuse->adc_type == TPS2552){ //placeholder calculation for 5V
-            current = current * 0.1f; //current calculation for TPS2552
-        }
-        return current;
-    }
-    return -1.0f; //return -1 if no current sensing is available
 }

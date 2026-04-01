@@ -20,15 +20,13 @@
 
 
 typedef struct {
-    FLOAT_CAN_STRUCT* parameter;
+    FLOAT_CAN_STRUCT* currentparam;
     GPIO_TypeDef* enable_fuse_port;
     uint16_t enable_fuse_pin;
     GPIO_TypeDef* flt_out_port;
     uint16_t flt_out_pin;
     GPIO_TypeDef* flt_led_port;
     uint16_t flt_led_pin;
-    ADC_TypeDef* curr_out_port;
-    uint16_t curr_out_pin;
     uint8_t enabled;
     uint8_t adc_type;
     float amp_max;
@@ -47,6 +45,5 @@ typedef struct {
 extern RVC_POWER_CHANNEL* POWER_CHANNELS[NUM_OF_CHANNELS];
 
 void update_efuse(RVC_POWER_CHANNEL* efuse);
-float get_current(RVC_POWER_CHANNEL* efuse);
 
 #endif /* INC_Efuse_H_ */
