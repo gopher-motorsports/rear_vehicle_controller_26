@@ -1,5 +1,9 @@
 #include "rvc.h"
 
+
+//Current Sensing Variables:
+uint8_t currentSensorStatus = UNINITIALIZED;
+
 // the HAL_CAN struct. This example only works for a single CAN bus
 CAN_HandleTypeDef* example_hcan;
 #define PRINTF_HB_MS_BETWEEN 500
@@ -81,20 +85,71 @@ void init_error(void)
 // Port over Buzzer & BrakeLight Code from RVC 2025
 // Buzzer should be active when inverters are in predrive, brake light should be active about a PSI threshold (~25psi)
 void update_brakelight_and_buzzer(){
-	if(brakePressureRear_psi.data > BRAKE_LIGHT_THRESH_psi) {
+	if(rvcBrakePressureRear_psi.data > BRAKE_LIGHT_THRESH_psi) {
 		HAL_GPIO_WritePin(BRK_LT_GPIO_Port, BRK_LT_Pin, MOSFET_PULL_DOWN_ON);
-		update_and_queue_param_u8(&brakeLightOn_state, TRUE);
+		update_and_queue_param_u8(&rvcBrakeLightOn_state, TRUE);
 	} else {
 		HAL_GPIO_WritePin(BRK_LT_GPIO_Port, BRK_LT_Pin, MOSFET_PULL_DOWN_OFF);
-		update_and_queue_param_u8(&brakeLightOn_state, FALSE);
+		update_and_queue_param_u8(&rvcBrakeLightOn_state, FALSE);
 	}
 
-	if(vehicleState_state.data == VEHICLE_PREDRIVE) {
+	if(rvcVehicleState_state.data == VEHICLE_PREDRIVE) {
 		HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, MOSFET_PULL_DOWN_ON);
-		update_and_queue_param_u8(&vehicleBuzzerOn_state, TRUE);
+		update_and_queue_param_u8(&rvcVehicleBuzzerOn_state, TRUE);
 	} else {
 		HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, MOSFET_PULL_DOWN_OFF);
-		update_and_queue_param_u8(&vehicleBuzzerOn_state, FALSE);
+		update_and_queue_param_u8(&rvcVehicleBuzzerOn_state, FALSE);
 	}
 	return;
+}
+
+void update_TSSI_LED(){
+	if(HAL_GetTick() > TSSI_RESET_TIME_ms && (imdFault_state.data || amsFault_state.data)) {
+		HAL_GPIO_WritePin(TSSI_GREEN_GPIO_Port, TSSI_GREEN_Pin, 0);
+		HAL_GPIO_WritePin(TSSI_RED_GPIO_Port, TSSI_RED_Pin, (HAL_GetTick() % TSSI_FLASH_PERIOD_ms) < TSSI_FLASH_PERIOD_ms / 2);
+	}
+	else{
+		HAL_GPIO_WritePin(TSSI_RED_GPIO_Port, TSSI_RED_Pin, 0);
+		HAL_GPIO_WritePin(TSSI_GREEN_GPIO_Port, TSSI_GREEN_Pin, 1);
+	}
+}
+
+float getTractiveSystemCurrent(){
+    // Fetch current sensor data from gophercan
+	float tractiveSystemCurrent = 0;
+    float currHI = rvcCurrentSensorHigh_A.data;
+    float currLO = rvcCurrentSensorLow_A.data;
+    uint8_t currentSensorStatusHI = 0;
+    uint8_t currentSensorStatusLO = 0;
+
+    // If the current exceeds the following threshold in either the positive or negative direction,
+    // the sensor input has railed to 0 or 5v and a current sensor error is set
+    currentSensorStatusHI = (fabs(currHI) < CURRENT_HIGH_RAIL_THRESHOLD) ? (WORKING) : (FAULTING);
+    currentSensorStatusLO = (fabs(currLO) < CURRENT_LOW_RAIL_THRESHOLD) ? (WORKING) : (FAULTING);
+
+    // To use the HI current sensor channel, it must be working AND (it must exceed the measuring range of the low channel OR the low channel must be faulty)
+    if ((currentSensorStatusHI == WORKING) && ((fabs(currLO) > CURRENT_LOW_TO_HIGH_SWITCH_THRESHOLD + (CHANNEL_FILTERING_WIDTH / 2)) || (currentSensorStatusLO != WORKING)))
+    {
+        tractiveSystemCurrent = currHI;
+        currentSensorStatus = WORKING;
+    }
+    else if ((currentSensorStatusHI == WORKING) && (currentSensorStatusLO == WORKING) && ((fabs(currLO) > CURRENT_LOW_TO_HIGH_SWITCH_THRESHOLD - (CHANNEL_FILTERING_WIDTH / 2))))
+    {
+        float interpolationStart    =   CURRENT_LOW_TO_HIGH_SWITCH_THRESHOLD  - (CHANNEL_FILTERING_WIDTH / 2);
+        float interpolationRatio    =   (currLO - interpolationStart) / CHANNEL_FILTERING_WIDTH;
+        float filteredCurrent       =   ((1.0f - interpolationRatio) * currLO) + (interpolationRatio * currHI);
+        tractiveSystemCurrent  =   filteredCurrent;
+        currentSensorStatus = WORKING;
+    }
+    else if (currentSensorStatusLO == WORKING) // If the above condition is not satisfied, the LO channel must be working in order to use its data
+    {
+        tractiveSystemCurrent = currLO;
+        currentSensorStatus = WORKING;
+    }
+    else // If both sensors are faulty, no current data can be accurately returned
+    {
+    	currentSensorStatus = FAULTING;
+    }
+
+    return tractiveSystemCurrent;
 }
