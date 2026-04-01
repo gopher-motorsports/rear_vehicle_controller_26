@@ -77,3 +77,24 @@ void init_error(void)
 		HAL_Delay(250);
 	}
 }
+
+// Port over Buzzer & BrakeLight Code from RVC 2025
+// Buzzer should be active when inverters are in predrive, brake light should be active about a PSI threshold (~25psi)
+void update_brakelight_and_buzzer(){
+	if(brakePressureRear_psi.data > BRAKE_LIGHT_THRESH_psi) {
+		HAL_GPIO_WritePin(BRK_LT_GPIO_Port, BRK_LT_Pin, MOSFET_PULL_DOWN_ON);
+		update_and_queue_param_u8(&brakeLightOn_state, TRUE);
+	} else {
+		HAL_GPIO_WritePin(BRK_LT_GPIO_Port, BRK_LT_Pin, MOSFET_PULL_DOWN_OFF);
+		update_and_queue_param_u8(&brakeLightOn_state, FALSE);
+	}
+
+	if(vehicleState_state.data == VEHICLE_PREDRIVE) {
+		HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, MOSFET_PULL_DOWN_ON);
+		update_and_queue_param_u8(&vehicleBuzzerOn_state, TRUE);
+	} else {
+		HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, MOSFET_PULL_DOWN_OFF);
+		update_and_queue_param_u8(&vehicleBuzzerOn_state, FALSE);
+	}
+	return;
+}
