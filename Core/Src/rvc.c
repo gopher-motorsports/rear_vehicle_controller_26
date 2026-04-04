@@ -153,3 +153,10 @@ float getTractiveSystemCurrent(){
 
     return tractiveSystemCurrent;
 }
+
+
+
+// Create function to update BSPD parmameters
+void update_bspd_params() {
+	
+}
