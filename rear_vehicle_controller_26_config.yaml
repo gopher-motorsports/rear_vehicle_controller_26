@@ -54,11 +54,19 @@ buckets:
                 samples_buffered: 1
             
             # RVC Controlled Outputs
-            rvcCoolantFanPower_percent:
+            rvcCoolantFanPower1_percent:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            rvcCoolantPumpPower_percent:
+            rvcCoolantFanPower2_percent:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            rvcCoolantPumpPower1_percent:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            rvcCoolantPumpPower2_percent:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1

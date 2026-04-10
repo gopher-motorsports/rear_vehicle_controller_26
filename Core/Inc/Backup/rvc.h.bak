@@ -3,11 +3,9 @@
 
 #include "main.h"
 #include "GopherCAN.h"
-#include "gopher_sense.h"
 #include "cooling.h"
 #include <stdio.h>
 #include <math.h>
-#include "tim.h"
 
 // ====================================== PULLUP PARAMETERS =====================================
 #define RAD_FAN_ON (GPIO_PIN_SET)
