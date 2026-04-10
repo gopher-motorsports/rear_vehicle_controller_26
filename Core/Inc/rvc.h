@@ -89,7 +89,7 @@ typedef enum
 } Sensor_Status_E;
 
 
-void init(CAN_HandleTypeDef* hcan_ptr);
+void init_rvc(CAN_HandleTypeDef* hcan_ptr);
 void can_buffer_handling_loop();
 void main_loop();
 void update_TSSI_LED();

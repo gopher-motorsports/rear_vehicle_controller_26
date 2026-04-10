@@ -47,6 +47,9 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 file(GLOB MAIN_SOURCES
     "${CMAKE_SOURCE_DIR}/Core/Src/*.c"
 )
+list(REMOVE_ITEM MAIN_SOURCES
+    "${CMAKE_SOURCE_DIR}/Core/Src/system_stm32f4xx.c"
+)
 
 # Gather all gophercan source files
 file(GLOB GOPHERCAN_SOURCES
