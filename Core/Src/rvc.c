@@ -170,3 +170,70 @@ void update_bspd_params() {
 	// If the fault is active, but not runaway, then it must be an input fault
 	rvcBspdInputFault = !rvcBspdRunawayFault && rvcBspdFaultActive;
 }
+
+void update_cooling_pi_loop(){
+	/*
+	/ figure out correct pump and fan frequency, configure pwm drivers to hit that frequency and be 
+	/ able to set a custom fan/pump threshold
+	/
+	/ use P control when temperature goes above a certain threshold to get back down to that threshold
+	/
+	/ set saturation limits for the output so that we can't command like "-10%" or "110%"
+	*/
+	//max temps used for now, can change to by pump and fan if needed
+	// float inv_temp = fmaxf(
+    // fmaxf(controllerTemp_RL_C.data, controllerTemp_RR_C.data),
+    // fmaxf(controllerTemp_FL_C.data, controllerTemp_FR_C.data));
+	// float motor_temp = fmaxf(
+    // fmaxf(motorTemp_RL_C.data, motorTemp_RR_C.data),
+    // fmaxf(motorTemp_FL_C.data, motorTemp_FR_C.data));
+
+	// float pump_percent;
+	// float fan_percent;
+
+    // //PI variables
+    // U32 last_on = 0;
+    // float integral_error = 0;
+    // float total_error = 0;
+
+	// //determine if pump should be on, and what its percent should be with PI loop
+    // float error_inv = inv_temp - INVERTER_FAN_THRESH_C;
+    // float error_motor = motor_temp - MOTOR_FAN_THRESH_C;
+    // if (error_inv > 0 || error_motor > 0) {
+    //     //if either temperature is above threshold, turn on fan and calculate percent
+    //     total_error = error_inv + error_motor;
+    //     if(K_Porportional * total_error > 100){
+    //         integral_error = 0;             //prevents early integral windup
+    //     } else {
+    //         integral_error += total_error;              //update integral error
+    //     }
+
+    //     fan_percent = K_Porportional * total_error;     //percent is proportional term
+    //     fan_percent += K_Integral * integral_error;     //add integral term
+    //     pump_percent = fan_percent * (MOTOR_FAN_THRESH_C/MOTOR_PUMP_THRESH_C);
+    //     if (fan_percent > FAN_MAX_PERCENT) {
+    //         fan_percent = FAN_MAX_PERCENT;
+    //         pump_percent = PUMP_100_PERCENT;
+    //     } else if (fan_percent < FAN_MIN_PERCENT) {
+    //         fan_percent = FAN_MIN_PERCENT;
+    //     }
+    //     if(pump_percent > PUMP_100_PERCENT){
+    //         pump_percent = PUMP_100_PERCENT;
+    //     } else if (pump_percent < PUMP_OFF){
+    //         pump_percent = PUMP_OFF;
+    //     }
+    // } 
+    // else {
+    //     //if temps are below, turn off cooling after a delay
+    //     if(HAL_GetTick() - last_on > COOLING_OFF_DELAY_MS){
+    //         fan_percent = FAN_OFF;
+    //         pump_percent = PUMP_OFF;
+    //     }
+    // }
+
+    // //updates pwm signals
+    // update_pwm(PUMP_PWM_Timer_0, PUMP_Channel_0, pump_percent);
+    // update_pwm(PUMP_PWM_Timer_1, PUMP_Channel_1, pump_percent);
+    // update_pwm(FAN_PWM_Timer_0, FAN_Channel_0, fan_percent);
+    // update_pwm(FAN_PWM_Timer_1, FAN_Channel_1, fan_percent);
+}
