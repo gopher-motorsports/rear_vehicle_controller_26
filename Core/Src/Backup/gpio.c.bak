@@ -63,7 +63,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, HBEAT_LED_Pin|TSSI_RED_Pin|TSSI_GREEN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, FLT_5V_1_LED_Pin|FLT_5V_2_LED_Pin|FLT_12V_LED_Pin|SNS_5V_1_EN_Pin
+  HAL_GPIO_WritePin(GPIOD, SNS_FLT_5V_1_LED_Pin|SNS_FLT_5V_2_LED_Pin|SNS_FLT_12V_LED_Pin|SNS_5V_1_EN_Pin
                           |SNS_5V_2_EN_Pin|SNS_12V_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PEPin PEPin PEPin PEPin
@@ -109,7 +109,7 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : PDPin PDPin PDPin PDPin
                            PDPin PDPin */
-  GPIO_InitStruct.Pin = FLT_5V_1_LED_Pin|FLT_5V_2_LED_Pin|FLT_12V_LED_Pin|SNS_5V_1_EN_Pin
+  GPIO_InitStruct.Pin = SNS_FLT_5V_1_LED_Pin|SNS_FLT_5V_2_LED_Pin|SNS_FLT_12V_LED_Pin|SNS_5V_1_EN_Pin
                           |SNS_5V_2_EN_Pin|SNS_12V_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;

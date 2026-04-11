@@ -9,6 +9,13 @@
 #include <math.h>
 #include "tim.h"
 
+// ====================================== PULLUP PARAMETERS =====================================
+#define RAD_FAN_ON (GPIO_PIN_SET)
+#define RAD_FAN_OFF (GPIO_PIN_RESET)
+#define PUMP_DIGITAL_ON (GPIO_PIN_SET)
+#define PUMP_DIGITAL_OFF (GPIO_PIN_RESET)
+// ==============================================================================================
+
 // ======================================== I/O PARAMETERS ======================================
 #define MOSFET_PULL_DOWN_ON (GPIO_PIN_SET)
 #define MOSFET_PULL_DOWN_OFF (GPIO_PIN_RESET)

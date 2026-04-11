@@ -4,9 +4,6 @@
 #include "rvc.h"
 #include <stdbool.h>
 
-#define NUM_OF_LOW_POWER_CHANNELS 2
-#define NUM_OF_HIGH_POWER_CHANNELS 1
-
 #define TOTAL_EFUSE_RETRIES 3
 #define EFUSE_RETRY_DELAY_ms 1000
 

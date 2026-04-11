@@ -42,7 +42,7 @@ void init_rvc(CAN_HandleTypeDef* hcan_ptr)
 	}
 	init_Fans(&htim2, &htim2, TIM_CHANNEL_1, TIM_CHANNEL_2);
 	init_Pumps(&htim3, &htim3, TIM_CHANNEL_1, TIM_CHANNEL_2);
-
+	init_Efuses();
 }
 
 
