@@ -1,5 +1,4 @@
 #include "rvc.h"
-#include "cooling.h"
 
 
 //Current Sensing Variables:
