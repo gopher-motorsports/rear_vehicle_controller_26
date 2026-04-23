@@ -32,6 +32,9 @@ void init_rvc(CAN_HandleTypeDef* hcan_ptr)
 	init_Fans(&htim2, &htim2, TIM_CHANNEL_1, TIM_CHANNEL_2);
 	init_Pumps(&htim3, &htim3, TIM_CHANNEL_1, TIM_CHANNEL_2);
 
+	init_Fans(&htim2, &htim2, TIM_CHANNEL_1, TIM_CHANNEL_2);
+	init_Pumps(&htim3, &htim3, TIM_CHANNEL_1, TIM_CHANNEL_2);
+
 	// Set the function pointer of SET_LED_STATE. This means the function change_led_state()
 	// will be run whenever this can command is sent to the module
 	attach_callback_cmd(SET_LED_STATE, &change_led_state);
@@ -60,13 +63,23 @@ void can_buffer_handling_loop()
 void main_loop()
 {
 	static U32 last_print_hb = 0;
+	static U32 fan_change = 0;
+
+	HAL_GPIO_WritePin(GIT_OTHER_LED_GPIO_Port, GIT_OTHER_LED_Pin, 1);
 
 	// send the current tick over UART every second
 	if (HAL_GetTick() - last_print_hb >= PRINTF_HB_MS_BETWEEN)
 	{
 		HAL_GPIO_TogglePin(HBEAT_LED_GPIO_Port, HBEAT_LED_Pin);
+		if (fan_change == 10) { //every 5 seconds update cooling
+			update_cooling_dynamic();
+			fan_change = 0;
+		}	
+
+		HAL_GPIO_TogglePin(HBEAT_LED_GPIO_Port, HBEAT_LED_Pin);
 		//printf("Current tick: %lu\n", HAL_GetTick());
 		last_print_hb = HAL_GetTick();
+		fan_change++;
 	}
 }
 

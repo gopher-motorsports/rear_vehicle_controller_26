@@ -45,6 +45,21 @@ void init_Fans(TIM_HandleTypeDef* timer_address_F, TIM_HandleTypeDef* timer_addr
 	HAL_TIM_PWM_Start(FAN_PWM_Timer_R, FAN_Channel_R); //turn on PWM generation
 }
 
+void update_fans(bool next_state){
+	if(next_state){
+		__HAL_TIM_SET_COMPARE(FAN_PWM_Timer_R, FAN_Channel_R, 95000);
+		__HAL_TIM_SET_COMPARE(FAN_PWM_Timer_F, FAN_Channel_F, 95000);
+		//75 % DUT
+	}
+	else{
+		__HAL_TIM_SET_COMPARE(FAN_PWM_Timer_R, FAN_Channel_R, 50000);
+		__HAL_TIM_SET_COMPARE(FAN_PWM_Timer_F, FAN_Channel_F, 50000);
+		//50 % DUT
+	}
+	__HAL_TIM_SET_COMPARE(PUMP_PWM_Timer_F, PUMP_Channel_F, 25000);
+	__HAL_TIM_SET_COMPARE(PUMP_PWM_Timer_R, PUMP_Channel_R, 25000);
+}
+
 void update_cooling_on_off() {
 	//motor_mph = electricalRPM_erpm.data * DRIVE_RATIO;
 	//max temps used for now, can change to by pump and fan if needed
@@ -81,10 +96,10 @@ void update_cooling_on_off() {
 			rad_fan_R_state = RAD_FAN_OFF;
 	}
 
-	HAL_GPIO_WritePin(PUMP_PWM_1_GPIO_Port, PUMP_PWM_1_Pin, digital_pump_F_state);
-	HAL_GPIO_WritePin(PUMP_PWM_2_GPIO_Port, PUMP_PWM_2_Pin, digital_pump_R_state);
-	HAL_GPIO_WritePin(FAN_PWM_1_GPIO_Port, FAN_PWM_1_Pin, rad_fan_F_state);
-	HAL_GPIO_WritePin(FAN_PWM_2_GPIO_Port, FAN_PWM_2_Pin, rad_fan_R_state);
+	__HAL_TIM_SET_COMPARE(PUMP_PWM_Timer_F, PUMP_Channel_F, PUMP_COUNTER_PERIOD * digital_pump_F_state);
+	__HAL_TIM_SET_COMPARE(PUMP_PWM_Timer_R, PUMP_Channel_R, PUMP_COUNTER_PERIOD * digital_pump_R_state);
+	__HAL_TIM_SET_COMPARE(FAN_PWM_Timer_F, FAN_Channel_F, FAN_COUNTER_PERIOD * rad_fan_F_state);
+	__HAL_TIM_SET_COMPARE(FAN_PWM_Timer_R, FAN_Channel_R, FAN_COUNTER_PERIOD * rad_fan_R_state);
 }
 
 void update_cooling_dynamic() {
@@ -134,8 +149,8 @@ void update_cooling_dynamic() {
 		rad_fan_R_state = FAN_MAX_PERCENT;
 	}
 
-	HAL_GPIO_WritePin(PUMP_PWM_1_GPIO_Port, PUMP_PWM_1_Pin, digital_pump_F_state);
-	HAL_GPIO_WritePin(PUMP_PWM_2_GPIO_Port, PUMP_PWM_2_Pin, digital_pump_R_state);
-	HAL_GPIO_WritePin(FAN_PWM_1_GPIO_Port, FAN_PWM_1_Pin, rad_fan_F_state);
-	HAL_GPIO_WritePin(FAN_PWM_2_GPIO_Port, FAN_PWM_2_Pin, rad_fan_R_state);
+	__HAL_TIM_SET_COMPARE(PUMP_PWM_Timer_F, PUMP_Channel_F, PUMP_COUNTER_PERIOD * digital_pump_F_state / 100);
+	__HAL_TIM_SET_COMPARE(PUMP_PWM_Timer_R, PUMP_Channel_R, PUMP_COUNTER_PERIOD * digital_pump_R_state / 100);
+	__HAL_TIM_SET_COMPARE(FAN_PWM_Timer_F, FAN_Channel_F, FAN_COUNTER_PERIOD * rad_fan_F_state / 100);
+	__HAL_TIM_SET_COMPARE(FAN_PWM_Timer_R, FAN_Channel_R, FAN_COUNTER_PERIOD * rad_fan_R_state / 100);
 }

@@ -16,24 +16,6 @@
 #define PUMP_DIGITAL_OFF (GPIO_PIN_RESET)
 // ==============================================================================================
 
-
-// ====================================== COOLING PARAMETERS ====================================
-#define INVERTER_PUMP_POWER_ON_THRESH 45.0f //Low Threshold Turn On
-#define MOTOR_PUMP_THRESH_C         45.0f // Motor temperature at which the cooling system turns on
-
-#define INVERTER_FAN_THRESH_C    50.0f  // Inverter temperature at which the cooling system turns on
-#define MOTOR_FAN_THRESH_C       50.0f  // Motor temperature at which the cooling system turns on
-#define COOLING_HYSTERESIS_C     5.0f   // Hysteresis when confined to digital signal (on/off)
-#define CAR_SPEED_FAN_HYS	     5.0f   // Hysteresis on Car speed for turning on/off fans
-#define CAR_SPEED_FAN_THRESH	 20.0f  // Car speed at which air cooling from movement is enough
-//#define USING_PUMP_PWM
-#define PUMP_OFF            0  //0% duty cycle --> 0/49999
-#define PUMP_50_PERCENT     25000 //50% duty cycle --> 25000/49999
-#define PUMP_100_PERCENT    49999 //100% duty cycle --> 49999/49999
-#define PUMP_COUNTER_PERIOD	49999
-#define PUMP_PERCENT_OFFSET 0.5f //if the pump is on it will statr at 50%
-// ==============================================================================================
-
 // ======================================== I/O PARAMETERS ======================================
 #define MOSFET_PULL_DOWN_ON (GPIO_PIN_SET)
 #define MOSFET_PULL_DOWN_OFF (GPIO_PIN_RESET)
