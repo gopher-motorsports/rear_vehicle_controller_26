@@ -68,6 +68,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${MAIN_SOURCES}
     ${GOPHERCAN_SOURCES}
     ${GOPHERSENSE_SOURCES}
+    Core/Inc/drs.h
 )
 
 # Add include paths
