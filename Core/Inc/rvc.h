@@ -5,6 +5,8 @@
 #include "GopherCAN.h"
 #include "gopher_sense.h"
 #include "cooling.h"
+#include "EFuse.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <math.h>
 #include "tim.h"

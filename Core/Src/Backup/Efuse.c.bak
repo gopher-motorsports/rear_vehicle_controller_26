@@ -77,7 +77,7 @@ RVC_HIGH_POWER_CHANNEL SNS_12V_Chan = {
     .retry_delay_ms = EFUSE_RETRY_DELAY_ms,
 	.retries_left = TOTAL_EFUSE_RETRIES,
 	.amp_max 	  = RVC_12V_CURRENT_LIMIT_A,
-	.amp_can_param	  = &rvcEfuse12VSNSCurrent_A
+	.amp_can_param	  = &rvc12VCurrent_A
 };
 
 RVC_HIGH_POWER_CHANNEL* RVC_HIGH_POWER_CHANNELS[] = {
