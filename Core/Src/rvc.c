@@ -1,4 +1,5 @@
 #include "rvc.h"
+#include "drs.h"
 #include "Efuse.h"
 
 //variables to add
@@ -40,8 +41,10 @@ void init_rvc(CAN_HandleTypeDef* hcan_ptr)
 	{
 		
 	}
+	//PWM initializations
 	init_Fans(&htim2, &htim2, TIM_CHANNEL_1, TIM_CHANNEL_2);
 	init_Pumps(&htim3, &htim3, TIM_CHANNEL_1, TIM_CHANNEL_2);
+	init_DRS_servo(&htim4, TIM_CHANNEL_4);
 	init_efuses();
 }
 
@@ -67,6 +70,7 @@ void can_buffer_handling_loop()
 //  called every 1ms
 void main_loop()
 {
+	set_DRS_Servo_Position_Auto();
 	update_telemetry_params();
 	update_bspd_params();
 	update_brakelight_and_buzzer();

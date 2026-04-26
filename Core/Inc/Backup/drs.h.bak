@@ -12,7 +12,7 @@
 
 /*DRS duty cycle periods: 500us-2500us pulses with a max period of 3000ms
 	corresponds to 2500-24999 compare match value and 29999 overflow value
-	for timer 3 */
+	for timer 4 */
 
 
 #define DRS_HYSTERESIS			  5.0f
@@ -56,21 +56,6 @@ typedef enum
 	RIGHT_LIMIT_BREACHED
 } STEERING_ANGLE_STATE;
 
-typedef struct {
-    FLOAT_CAN_STRUCT* parameter;
-    GPIO_TypeDef* enable_switch_port;
-    uint16_t enable_switch_pin;
-    uint8_t enabled;
-    float amp_max;
-    float ampsec_max;
-    float ampsec_sum;
-    uint32_t trip_time;
-    uint32_t reset_delay_ms;
-    uint32_t last_update;
-    uint32_t overcurrent_count;
-    uint8_t max_overcurrent_count;
-} POWER_CHANNEL;
-
 void init_DRS_servo(TIM_HandleTypeDef* timer_address, U32 channel);
-void set_DRS_Servo_Position(U8 start_up_condition);
+void set_DRS_Servo_Position();
 #endif /* INC_DRS_H_ */

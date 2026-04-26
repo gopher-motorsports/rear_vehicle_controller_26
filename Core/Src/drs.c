@@ -12,12 +12,12 @@
 
 TIM_HandleTypeDef* DRS_Timer;
 U32 DRS_Channel;
-int rot_dial_timer_val = 0; //keeping this in here if we want to use rotary dial
+U32 last_button_press_time = 0;	//for implementing toggle functionality
 U8 drs_button_state;
+bool turning_wheel_hysteresis_on = false;
 
 //local function prototypes
 bool drs_shutoff_conditions_reached();
-void update_power_channel(POWER_CHANNEL* channel);
 
 //DRS brake thresholds
 typedef enum {
@@ -31,32 +31,18 @@ void init_DRS_servo(TIM_HandleTypeDef* timer_address, U32 channel){
 	HAL_TIM_PWM_Start(DRS_Timer, DRS_Channel); //turn on PWM generation
 }
 
-void set_DRS_Servo_Position(U8 start_up_condition){
-	//duty cycle lookup table for each DRS position, optional if we are using the rotary dial
+void set_DRS_Servo_Position_Open(bool set_to_open){
+	if(set_to_open == false){
+		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
+	}
+	else{
+		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
+	}
+}
 
+void set_DRS_Servo_Position_Button(){
+	//hold down to keep DRS on
 	drs_button_state = swButon2_state.data;
-//	if(start_up_condition){
-//			__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
-//	}
-//	else{
-//		if(drs_button_state == 1){
-//#ifdef DRS_SHUTDOWN_CHECKS
-//			if(drs_shutoff_conditions_reached()){
-//				__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
-//			}
-//			else{
-//			__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
-//			}
-//#else
-//			__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
-//#endif
-//
-//		}
-//		else{
-//			__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
-//		}
-//
-//	}
 
 	if(drs_button_state == 1){
 		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
@@ -66,29 +52,41 @@ void set_DRS_Servo_Position(U8 start_up_condition){
 	}
 }
 
+void set_DRS_Servo_Position_Auto(){
+	//Sets DRS position based on brake pressure and steering angle conditions
+	if(drs_shutoff_conditions_reached()){
+		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
+	}
+	else{
+		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
+	}
+}
+
 bool drs_shutoff_conditions_reached(){
-	static DRS_BRAKE_STATES drs_brake_state = NORMAL;
+	static DRS_BRAKE_STATES drs_brake_state = NORMAL_STATE;
 	switch (drs_brake_state){
 		case DRS_BRAKE_TRIPPED:
-			//have let off the brakes --> closed to open
-			if(rvcBrakePressureRear_psi.data > BRAKE_SHUTOFF_THRESHOLD - DRS_HYSTERESIS){// ||
-				  drs_brake_state = DRS_BRAKE_NORMAL;
-				  return false;
-		    }
+			//brakes are not on and steering wheel is centered --> closed to open
+			if((rvcBrakePressureRear_psi.data <= BRAKE_SHUTOFF_THRESHOLD - DRS_HYSTERESIS) && 
+			(fvcSteeringAngle_deg.data > STEERING_ANGLE_LEFT_RETURN && fvcSteeringAngle_deg.data < STEERING_ANGLE_RIGHT_RETURN)){
+				drs_brake_state = DRS_BRAKE_NORMAL;
+				return false; //DRS should be open
+		    }			
 			return true; //DRS should be closed
 			break;
 		case DRS_BRAKE_NORMAL:
 		default:
-			//have breached DRS threshold --> open to closed
-			if(rvcBrakePressureRear_psi.data > BRAKE_SHUTOFF_THRESHOLD + DRS_HYSTERESIS){// ||
-				  drs_brake_state = TRIPPED;
-				  return true;
+			//have breached DRS braking or steering angle threshold --> open to closed
+			if((rvcBrakePressureRear_psi.data > BRAKE_SHUTOFF_THRESHOLD + DRS_HYSTERESIS) ||
+			(fvcSteeringAngle_deg.data < STEERING_ANGLE_LEFT_SHUTOFF || fvcSteeringAngle_deg.data > STEERING_ANGLE_RIGHT_SHUTOFF)){
+				drs_brake_state = DRS_BRAKE_TRIPPED;
+				return true; //DRS should be closed
 			}
-			return false; //drs should be open
+
+			return false; //DRS should be open
 			break;
 	}
 
 	//reaches here we are in trouble
-	return false;
-
+	return false;	//DRS should be open
 }

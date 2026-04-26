@@ -1,3 +1,5 @@
+// TODO: Port over RVC 2025 Code
+// Fortify the DRS shutoff conditons reached to include both steering angle & brake
 /*
  * drs.c
  *
@@ -15,7 +17,6 @@ U8 drs_button_state;
 
 //local function prototypes
 bool drs_shutoff_conditions_reached();
-void update_power_channel(POWER_CHANNEL* channel);
 
 //DRS brake thresholds
 typedef enum {
@@ -29,37 +30,14 @@ void init_DRS_servo(TIM_HandleTypeDef* timer_address, U32 channel){
 	HAL_TIM_PWM_Start(DRS_Timer, DRS_Channel); //turn on PWM generation
 }
 
-void set_DRS_Servo_Position(U8 start_up_condition){
+void set_DRS_Servo_Position(){
 	//duty cycle lookup table for each DRS position, optional if we are using the rotary dial
-
 	drs_button_state = swButon2_state.data;
-//	if(start_up_condition){
-//			__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
-//	}
-//	else{
-//		if(drs_button_state == 1){
-//#ifdef DRS_SHUTDOWN_CHECKS
-//			if(drs_shutoff_conditions_reached()){
-//				__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
-//			}
-//			else{
-//			__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
-//			}
-//#else
-//			__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
-//#endif
-//
-//		}
-//		else{
-//			__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
-//		}
-//
-//	}
 
 	if(drs_button_state == 1){
 		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
 	}
-	else{
+	else if(drs_button_pressed == true){
 		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
 	}
 }
@@ -79,7 +57,7 @@ bool drs_shutoff_conditions_reached(){
 		default:
 			//have breached DRS threshold --> open to closed
 			if(rvcBrakePressureRear_psi.data > BRAKE_SHUTOFF_THRESHOLD + DRS_HYSTERESIS){// ||
-				  drs_brake_state = TRIPPED;
+				  drs_brake_state = DRS_BRAKE_TRIPPED;
 				  return true;
 			}
 			return false; //drs should be open
