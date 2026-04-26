@@ -97,29 +97,23 @@ void init_error(void)
 // For ADC parameters you can ignore having to call "update_and_queue()" specifically as Gsense does it in the backend
 void update_telemtry_params(){
 	// BSPD Faults
-
+	update_and_queue_param_u8(&rvcBspdBrakePressureSensorFault_state, rear_brake_press_fault_tripped); //Brake Pressure Out of Range
+	update_and_queue_param_u8(&rvcBspdTractiveSystemCurrentSensorFault_state, current_sensor_fault_tripped); //Current Sesnor Out of Range
+	update_and_queue_param_u8(&rvcBspdTractiveSystemBrakingFault_state, TS_braking_fault_tripped); //TS Brake Fault --> Hard breaking + 5kW of power from tractive system
+	update_and_queue_param_u8(&rvcBspdInputFault_state, input_fault_tripped); //Input Fault
+	update_and_queue_param_u8(&rvcBspdFault_state, bspd_fault_tripped); //Overall BSPD
 	// Efuse Sensor Power Faults (Not the fault pins, but if sensor power is disabled)
-
+	update_and_queue_param_u8(&rvcEfuseSensorPowerFault5_0_state, efuse_sensor_power_fault_tripped); // RVC EFuse 5V 1 off
+	update_and_queue_param_u8(&rvcEfuseRVCPowerFault5_1_state, efuse_rvc_power_fault5_1_tripped); 
+	update_and_queue_param_u8(&rvcEfuseRVCPowerFault12_0_state, efuse_rvc_power_fault_tripped); 
 	// Cooling Power (Pump, Radiator Fan)
-
+	update_and_queue_param_u8(&coolantFanPower_percent, rad_fan_state*100);
+	update_and_queue_param_u8(&coolantPumpPower_percent, digital_pump_state * 100);
 	// Status(Hbeat, Brake Light, Buzzer)
+	update_and_queue_param_u8(&rvcBrakeLightOn_state, FALSE);
+	update_and_queue_param_u8(&rvcVehicleBuzzerOn_state, FALSE);
 }
 
-
-// #TODO: write a function that sends highly important signals @ 250 Hz, medium important signals @ 50 Hz, and low importance signals @ 10 Hz
-// This one ain't to deep just call update_and_queue_u8(), update_and_queue_u16(), update_and_queue_float() on everything
-// You can actually just run this function in the main_loop() called at 1ms
-// Make sure you are passing in global vairables to this file not the .data of the variable, that will send the parameter super slow (2.5s)
-// For ADC parameters you can ignore having to call "update_and_queue()" specifically as Gsense does it in the backend
-void update_telemtry_params(){
-	// BSPD Faults
-
-	// Efuse Sensor Power Faults (Not the fault pins, but if sensor power is disabled)
-
-	// Cooling Power (Pump, Radiator Fan)
-
-	// Status(Hbeat, Brake Light, Buzzer)
-}
 
 // Port over Buzzer & BrakeLight Code from RVC 2025
 // Buzzer should be active when inverters are in predrive, brake light should be active about a PSI threshold (~25psi)
