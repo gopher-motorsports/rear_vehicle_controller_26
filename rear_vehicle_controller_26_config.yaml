@@ -120,15 +120,19 @@ buckets:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            rvc5V2Overcurrent_Count:
+            rvcEfuse5V1Fault_state:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            rvc12VOvercurrent_Count:
+            rvcEfuse5V2Fault_state:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            rvc12VCurrent_A:
+            rvcEfuse12VFault_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            rvcEfuse12VCurrent_A:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1

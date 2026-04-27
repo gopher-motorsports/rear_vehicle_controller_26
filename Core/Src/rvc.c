@@ -1,5 +1,4 @@
 #include "rvc.h"
-#include "cooling.h"
 
 //variables to add
 uint8_t can_fan_percent_R = 0;
@@ -42,7 +41,7 @@ void init_rvc(CAN_HandleTypeDef* hcan_ptr)
 	}
 	init_Fans(&htim2, &htim2, TIM_CHANNEL_1, TIM_CHANNEL_2);
 	init_Pumps(&htim3, &htim3, TIM_CHANNEL_1, TIM_CHANNEL_2);
-	init_Efuses();
+	init_efuses();
 }
 
 
@@ -71,6 +70,10 @@ void main_loop()
 	update_TSSI_LED();
 	hbeat_blink();
 	update_bspd_params();
+	update_brakelight_and_buzzer();
+
+	update_low_power_efuses();
+	update_high_power_efuses();
 	update_brakelight_and_buzzer();
 }
 
