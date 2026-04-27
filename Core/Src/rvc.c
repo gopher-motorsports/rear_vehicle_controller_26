@@ -1,15 +1,29 @@
 #include "rvc.h"
 #include "cooling.h"
 
+//variables to add
+uint8_t can_fan_percent_R = 0;
+uint8_t can_fan_percent_F = 0;
+uint8_t can_pump_percent_R = 0;
+uint8_t can_pump_percent_F = 0;
+uint8_t sdc_break_point_tripped = 0;
+uint8_t efuse5_1_fault = 0;
+uint8_t efuse5_2_fault = 0;
+uint8_t efuse12V_fault = 0;
+uint8_t brake_light_on = 0;
+uint8_t vehicle_buzzer_on = 0;
+float brake_bias_percent = 0;
+uint8_t drs_state = 0;
+
 
 //Current Sensing Variables:
 uint8_t currentSensorStatus = UNINITIALIZED;
 
 //BSPD Variables:
 uint8_t rvcBspdRunawayFault = 0;
-uint8_t rvcBspdInputFault = 0;
 uint8_t rvcBspdFaultActive = 0;
 uint8_t rvcBspdFaultLatched = 0;
+uint8_t rvcBspdInputFault = 0;
 
 // the HAL_CAN struct. This example only works for a single CAN bus
 CAN_HandleTypeDef* example_hcan;
@@ -61,6 +75,7 @@ void can_buffer_handling_loop()
 void main_loop()
 {
 	static U32 last_print_hb = 0;
+	update_telemetry_params();
 
 	// send the current tick over UART every second
 	if (HAL_GetTick() - last_print_hb >= PRINTF_HB_MS_BETWEEN)
@@ -90,6 +105,43 @@ void init_error(void)
 	}
 }
 
+// #TODO: write a function that sends highly important signals @ 250 Hz, medium important signals @ 50 Hz, and low importance signals @ 10 Hz
+// This one ain't to deep just call update_and_queue_u8(), update_and_queue_u16(), update_and_queue_float() on everything
+// You can actually just run this function in the main_loop() called at 1ms
+// Make sure you are passing in global vairables to this file not the .data of the variable, that will send the parameter super slow (2.5s)
+// For ADC parameters you can ignore having to call "update_and_queue()" specifically as Gsense does it in the backend
+void update_telemetry_params(){
+	// BSPD Faults
+	update_and_queue_param_u8(&rvcBspdRunawayFault_state, rvcBspdRunawayFault); //TS Brake Fault --> Hard breaking + 5kW of power from tractive system
+	update_and_queue_param_u8(&rvcBspdInputFault_state, rvcBspdInputFault); //Input Fault
+	update_and_queue_param_u8(&rvcBspdFaultActive_state, rvcBspdFaultActive); //Overall BSPD
+	update_and_queue_param_u8(&rvcBspdFaultLatched_state, rvcBspdFaultLatched); //BSPD Fault Latched
+
+	//SDC
+	update_and_queue_param_u8(&rvcSdcBreakPoint, sdc_break_point_tripped); //SDC tripped
+	update_and_queue_param_u8(&rvcSdcStatus8, sdc_break_point_tripped); //SDC status bit 8 (break point tripped)
+	update_and_queue_param_u8(&rvcSdcStatus9, sdc_break_point_tripped); //SDC status bit 9 (break point tripped)
+
+
+	// Efuse Sensor Power Faults (Not the fault pins, but if sensor power is disabled)
+	update_and_queue_param_u8(&rvcEfuse5V1Fault_state, efuse5_1_fault); 
+	update_and_queue_param_u8(&rvcEfuse5V2Fault_state, efuse5_2_fault); 
+	update_and_queue_param_u8(&rvcEfuse12VFault_state, efuse12V_fault); 
+
+	// Cooling Power (Pump, Radiator Fan)
+	update_and_queue_param_u8(&rvcCoolantFanPowerF_percent, can_fan_percent_F);
+	update_and_queue_param_u8(&rvcCoolantFanPowerR_percent, can_fan_percent_R);
+	update_and_queue_param_u8(&rvcCoolantPumpPowerF_percent, can_pump_percent_F);
+	update_and_queue_param_u8(&rvcCoolantPumpPowerR_percent, can_pump_percent_R);
+
+	// Status(Hbeat, Brake Light, Buzzer)
+	update_and_queue_param_u8(&rvcBrakeLightOn_state, brake_light_on);
+	update_and_queue_param_u8(&rvcVehicleBuzzerOn_state, vehicle_buzzer_on);
+	update_and_queue_param_float(&rvcBrakeBias_percent, brake_bias_percent);
+	update_and_queue_param_u8(&rvcDrsEnabled_state, drs_state);
+}
+
+
 // Port over Buzzer & BrakeLight Code from RVC 2025
 // Buzzer should be active when inverters are in predrive, brake light should be active about a PSI threshold (~25psi)
 void update_brakelight_and_buzzer(){
@@ -112,7 +164,7 @@ void update_brakelight_and_buzzer(){
 }
 
 void update_TSSI_LED(){
-	if(HAL_GetTick() > TSSI_RESET_TIME_ms && (imdFault_state.data || amsFault_state.data)) {
+	if(HAL_GetTick() > TSSI_RESET_TIME_ms && (imdFault_state.data || bmsFault_state.data)) {
 		HAL_GPIO_WritePin(TSSI_GREEN_GPIO_Port, TSSI_GREEN_Pin, 0);
 		HAL_GPIO_WritePin(TSSI_RED_GPIO_Port, TSSI_RED_Pin, (HAL_GetTick() % TSSI_FLASH_PERIOD_ms) < TSSI_FLASH_PERIOD_ms / 2);
 	}

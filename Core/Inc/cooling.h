@@ -1,5 +1,15 @@
 #include "rvc.h"
 
+
+//===================================== EXTERNAL VARIABLES ======================================
+//used for sending over can
+// extern uint8_t fan_percent_R;
+// extern uint8_t fan_percent_F;
+// extern uint8_t pump_percent_R;
+// extern uint8_t pump_percent_F;
+//===============================================================================================
+
+
 // ====================================== PULLUP PARAMETERS =====================================
 #define RAD_FAN_ON (GPIO_PIN_SET)
 #define RAD_FAN_OFF (GPIO_PIN_RESET)

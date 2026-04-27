@@ -12,7 +12,8 @@ TIM_HandleTypeDef* FAN_PWM_Timer_F;
 TIM_HandleTypeDef* FAN_PWM_Timer_R;
 U32 FAN_Channel_F;
 U32 FAN_Channel_R;
-float fan_percent;
+float fan_percent_F;
+float fan_percent_R;
 
 //Pump
 // boolean steady_temperatures_achieved_pump[] = {true, true}; //LOT if pump temperatures have returned to ready state
@@ -25,7 +26,8 @@ TIM_HandleTypeDef* PUMP_PWM_Timer_F;
 TIM_HandleTypeDef* PUMP_PWM_Timer_R;
 U32 PUMP_Channel_F;
 U32 PUMP_Channel_R;
-float pump_percent;
+float pump_percent_F;
+float pump_percent_R;
 
 void init_Pumps(TIM_HandleTypeDef* timer_address_F, TIM_HandleTypeDef* timer_address_R, U32 channel_F, U32 channel_R){
 	PUMP_PWM_Timer_F = timer_address_F;
