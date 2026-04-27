@@ -69,5 +69,7 @@ void can_buffer_handling_loop();
 void main_loop();
 void update_TSSI_LED();
 float getTractiveSystemCurrent();
+void update_telemetry_params();
+void update_brakelight_and_buzzer();
 
 #endif /* INC_steering_wheel_module_26_H */
