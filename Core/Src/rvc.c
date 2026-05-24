@@ -1,4 +1,5 @@
 #include "rvc.h"
+#include "Efuse.h"
 
 //variables to add
 uint8_t can_fan_percent_R = 0;
