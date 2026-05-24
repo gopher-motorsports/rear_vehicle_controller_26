@@ -7,3 +7,5 @@
 *.ioc text eol=lf
 *.cmake text eol=lf
 CMakeLists.txt text eol=lf
+*.txt text eol=lf
+*.icf text eol=lf

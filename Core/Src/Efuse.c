@@ -92,12 +92,15 @@ void init_efuses(){
 		efuse->enabled = TRUE;
 	}
 
+#ifdef USING_12V_EFUSE
 	// High Power
 	for(int i = 0; i < NUM_OF_HIGH_POWER_CHANNELS;  i++){
 		RVC_HIGH_POWER_CHANNEL *efuse = RVC_HIGH_POWER_CHANNELS[i];
 		HAL_GPIO_WritePin(efuse->enable_gpio.port, efuse->enable_gpio.pin, HIGH_POW_EFUSE_ENABLED);
 		efuse->enabled = TRUE;
 	}
+#endif
+
 }
 
 void update_low_power_efuses(){

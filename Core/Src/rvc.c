@@ -64,18 +64,22 @@ void can_buffer_handling_loop()
 
 // main_loop
 //  another loop. This includes logic for sending a CAN command. Designed to be
-//  called every 10ms
+//  called every 1ms
 void main_loop()
 {
 	update_telemetry_params();
-	update_TSSI_LED();
-	hbeat_blink();
 	update_bspd_params();
 	update_brakelight_and_buzzer();
 
+	// LEDs
+	update_TSSI_LED();
+	hbeat_blink();
+
+	// Efuses
 	update_low_power_efuses();
+#ifdef USING_12V_EFUSE
 	update_high_power_efuses();
-	update_brakelight_and_buzzer();
+#endif
 }
 
 //Heartbeat LED
@@ -201,8 +205,8 @@ float getTractiveSystemCurrent(){
 // Create function to update BSPD parmameters
 void update_bspd_params() {
 	rvcBspdRunawayFault = HAL_GPIO_ReadPin(TS_ACC_FLT_GPIO_Port, TS_ACC_FLT_Pin);
-	rvcBspdFaultActive = HAL_GPIO_ReadPin(TS_SNS_FLT_GPIO_Port, TS_SNS_FLT_Pin);
-	rvcBspdFaultLatched = HAL_GPIO_ReadPin(BSPD_Logic_Output_GPIO_Port, BSPD_Logic_Output_Pin);
+	rvcBspdFaultActive =  !HAL_GPIO_ReadPin(TS_SNS_FLT_GPIO_Port, TS_SNS_FLT_Pin);
+	rvcBspdFaultLatched = !HAL_GPIO_ReadPin(BSPD_Logic_Output_GPIO_Port, BSPD_Logic_Output_Pin);
 	// If the fault is active, but not runaway, then it must be an input fault
 	rvcBspdInputFault = !rvcBspdRunawayFault && rvcBspdFaultActive;
 }

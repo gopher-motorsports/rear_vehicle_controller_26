@@ -24,6 +24,8 @@
 
 #define RVC_12V_CURRENT_LIMIT_A 0.250f
 
+//#define USING_12V_EFUSE
+
 typedef struct {
     GPIO_TypeDef* port;
     uint16_t pin;
