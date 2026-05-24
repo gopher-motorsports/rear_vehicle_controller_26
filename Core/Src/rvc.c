@@ -26,30 +26,23 @@ uint8_t rvcBspdFaultLatched = 0;
 uint8_t rvcBspdInputFault = 0;
 
 // the HAL_CAN struct. This example only works for a single CAN bus
-CAN_HandleTypeDef* example_hcan;
-#define PRINTF_HB_MS_BETWEEN 500
-
-// the CAN callback function used in this example
-static void change_led_state(U8 sender, U8 remote_param, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3);
-static void init_error(void);
+CAN_HandleTypeDef* CARSIDE_CAN;
+#define HBEAT_LED_DELAY_TIME_ms 500
 
 // init
 //  What needs to happen on startup in order to run GopherCAN
 void init_rvc(CAN_HandleTypeDef* hcan_ptr)
 {
-	example_hcan = hcan_ptr;
+	CARSIDE_CAN = hcan_ptr;
 
 	// initialize CAN
-	if (init_can(hcan_ptr, GCAN0))
+	if (init_can(CARSIDE_CAN, GCAN0))
 	{
 		
 	}
 	init_Fans(&htim2, &htim2, TIM_CHANNEL_1, TIM_CHANNEL_2);
 	init_Pumps(&htim3, &htim3, TIM_CHANNEL_1, TIM_CHANNEL_2);
 
-	// Set the function pointer of SET_LED_STATE. This means the function change_led_state()
-	// will be run whenever this can command is sent to the module
-	attach_callback_cmd(SET_LED_STATE, &change_led_state);
 }
 
 
@@ -65,7 +58,7 @@ void can_buffer_handling_loop()
 	}
 
 	// handle the transmission hardware for each CAN bus
-	service_can_tx(example_hcan);
+	service_can_tx(CARSIDE_CAN);
 }
 
 
@@ -74,34 +67,19 @@ void can_buffer_handling_loop()
 //  called every 10ms
 void main_loop()
 {
-	static U32 last_print_hb = 0;
 	update_telemetry_params();
-
-	// send the current tick over UART every second
-	if (HAL_GetTick() - last_print_hb >= PRINTF_HB_MS_BETWEEN)
-	{
-		HAL_GPIO_TogglePin(HBEAT_LED_GPIO_Port, HBEAT_LED_Pin);
-		//printf("Current tick: %lu\n", HAL_GetTick());
-		last_print_hb = HAL_GetTick();
-	}
+	update_TSSI_LED();
+	hbeat_blink();
+	update_bspd_params();
+	update_brakelight_and_buzzer();
 }
 
-// can_callback_function example
-static void change_led_state(U8 sender, U8 remote_param, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3)
-{
-	HAL_GPIO_WritePin(HBEAT_LED_GPIO_Port, HBEAT_LED_Pin, !!remote_param);
-	return;
-}
-
-// init_error
-//  This function will stay in an infinite loop, blinking the LED in a 0.5sec period. Should only
-//  be called from the init function before the RTOS starts
-void init_error(void)
-{
-	while (1)
-	{
+//Heartbeat LED
+void hbeat_blink(){
+	static uint32_t last_led = 0;
+	if(HAL_GetTick() - last_led >= HBEAT_LED_DELAY_TIME_ms) {
 		HAL_GPIO_TogglePin(HBEAT_LED_GPIO_Port, HBEAT_LED_Pin);
-		HAL_Delay(250);
+		last_led = HAL_GetTick();
 	}
 }
 

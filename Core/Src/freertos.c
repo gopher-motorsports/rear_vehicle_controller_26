@@ -130,8 +130,8 @@ void task_MainTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(10);
     main_loop();
+    osDelay(1);
   }
   /* USER CODE END task_MainTask */
 }
@@ -149,6 +149,7 @@ void gcanBufferHandling(void const * argument)
   /* Infinite loop */
   for(;;)
   {
+    can_buffer_handling_loop();
     osDelay(1);
   }
   /* USER CODE END gcanBufferHandling */
