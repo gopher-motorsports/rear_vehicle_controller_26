@@ -67,6 +67,8 @@ typedef enum
 void init_rvc(CAN_HandleTypeDef* hcan_ptr);
 void can_buffer_handling_loop();
 void main_loop();
+void hbeat_blink();
+void update_bspd_params();
 void update_TSSI_LED();
 float getTractiveSystemCurrent();
 void update_telemetry_params();
