@@ -22,9 +22,10 @@
 #define HIGH_POW_EFUSE_FLT      0
 #define HIGH_POW_EFUSE_NO_FLT   1
 
-#define RVC_12V_CURRENT_LIMIT_A 0.250f
+//Max draw of 12V channel is ~286mA = 250mA(BL) + 30mA (TSSI) + 6mA (buzzer)
+#define RVC_12V_CURRENT_LIMIT_A 0.350f
 
-//#define USING_12V_EFUSE
+#define USING_12V_EFUSE
 
 typedef struct {
     GPIO_TypeDef* port;
