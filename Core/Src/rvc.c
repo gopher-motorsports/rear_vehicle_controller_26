@@ -1,5 +1,5 @@
 #include "rvc.h"
-#include "cooling.h"
+#include "Efuse.h"
 
 //variables to add
 uint8_t can_fan_percent_R = 0;
@@ -42,7 +42,7 @@ void init_rvc(CAN_HandleTypeDef* hcan_ptr)
 	}
 	init_Fans(&htim2, &htim2, TIM_CHANNEL_1, TIM_CHANNEL_2);
 	init_Pumps(&htim3, &htim3, TIM_CHANNEL_1, TIM_CHANNEL_2);
-
+	init_efuses();
 }
 
 
@@ -64,14 +64,22 @@ void can_buffer_handling_loop()
 
 // main_loop
 //  another loop. This includes logic for sending a CAN command. Designed to be
-//  called every 10ms
+//  called every 1ms
 void main_loop()
 {
 	update_telemetry_params();
-	update_TSSI_LED();
-	hbeat_blink();
 	update_bspd_params();
 	update_brakelight_and_buzzer();
+	update_cooling_dynamic();
+	// LEDs
+	update_TSSI_LED();
+	hbeat_blink();
+
+	// Efuses
+	update_low_power_efuses();
+#ifdef USING_12V_EFUSE
+	update_high_power_efuses();
+#endif
 }
 
 //Heartbeat LED
@@ -197,8 +205,8 @@ float getTractiveSystemCurrent(){
 // Create function to update BSPD parmameters
 void update_bspd_params() {
 	rvcBspdRunawayFault = HAL_GPIO_ReadPin(TS_ACC_FLT_GPIO_Port, TS_ACC_FLT_Pin);
-	rvcBspdFaultActive = HAL_GPIO_ReadPin(TS_SNS_FLT_GPIO_Port, TS_SNS_FLT_Pin);
-	rvcBspdFaultLatched = HAL_GPIO_ReadPin(BSPD_Logic_Output_GPIO_Port, BSPD_Logic_Output_Pin);
+	rvcBspdFaultActive =  !HAL_GPIO_ReadPin(TS_SNS_FLT_GPIO_Port, TS_SNS_FLT_Pin);
+	rvcBspdFaultLatched = !HAL_GPIO_ReadPin(BSPD_Logic_Output_GPIO_Port, BSPD_Logic_Output_Pin);
 	// If the fault is active, but not runaway, then it must be an input fault
 	rvcBspdInputFault = !rvcBspdRunawayFault && rvcBspdFaultActive;
 }

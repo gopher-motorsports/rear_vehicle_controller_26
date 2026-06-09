@@ -5,149 +5,137 @@
 #include "cooling.h"
 
 //Fan
-U8 rad_fan_0_state = RAD_FAN_OFF;
-U8 rad_fan_1_state = RAD_FAN_OFF;
+U8 rad_fan_F_state = RAD_FAN_OFF;
+U8 rad_fan_R_state = RAD_FAN_OFF;
 
-TIM_HandleTypeDef* FAN_PWM_Timer_0;
-TIM_HandleTypeDef* FAN_PWM_Timer_1;
-U32 FAN_Channel_0;
-U32 FAN_Channel_1;
+TIM_HandleTypeDef* FAN_PWM_Timer_F;
+TIM_HandleTypeDef* FAN_PWM_Timer_R;
+U32 FAN_Channel_F;
+U32 FAN_Channel_R;
 float fan_percent;
 
 //Pump
 // boolean steady_temperatures_achieved_pump[] = {true, true}; //LOT if pump temperatures have returned to ready state
 // U8 pump_readings_below_HYS_threshold = 0;
 
-U8 digital_pump_0_state = PUMP_DIGITAL_OFF; //if no pump pwm and just digital
-U8 digital_pump_1_state = PUMP_DIGITAL_OFF; //if no pump pwm and just digital
+U8 digital_pump_F_state = PUMP_DIGITAL_OFF; //if no pump pwm and just digital
+U8 digital_pump_R_state = PUMP_DIGITAL_OFF; //if no pump pwm and just digital
 
-TIM_HandleTypeDef* PUMP_PWM_Timer_0;
-TIM_HandleTypeDef* PUMP_PWM_Timer_1;
-U32 PUMP_Channel_0;
-U32 PUMP_Channel_1;
+TIM_HandleTypeDef* PUMP_PWM_Timer_F;
+TIM_HandleTypeDef* PUMP_PWM_Timer_R;
+U32 PUMP_Channel_F;
+U32 PUMP_Channel_R;
 float pump_percent;
 
-
-void init_Pumps(TIM_HandleTypeDef* timer_address_0, TIM_HandleTypeDef* timer_address_1, U32 channel_0, U32 channel_1){
-	PUMP_PWM_Timer_0 = timer_address_0;
-	PUMP_PWM_Timer_1= timer_address_1;
-	PUMP_Channel_0 = channel_0;
-	PUMP_Channel_1 = channel_1;
-	HAL_TIM_PWM_Start(PUMP_PWM_Timer_0, PUMP_Channel_0); //turn on PWM generation
-	HAL_TIM_PWM_Start(PUMP_PWM_Timer_1, PUMP_Channel_1); //turn on PWM generation
+void init_Pumps(TIM_HandleTypeDef* timer_address_F, TIM_HandleTypeDef* timer_address_R, U32 channel_F, U32 channel_R){
+	PUMP_PWM_Timer_F = timer_address_F;
+	PUMP_PWM_Timer_R= timer_address_R;
+	PUMP_Channel_F = channel_F;
+	PUMP_Channel_R = channel_R;
+	HAL_TIM_PWM_Start(PUMP_PWM_Timer_F, PUMP_Channel_F); //turn on PWM generation
+	HAL_TIM_PWM_Start(PUMP_PWM_Timer_R, PUMP_Channel_R); //turn on PWM generation
 }
 
-void init_Fans(TIM_HandleTypeDef* timer_address_0, TIM_HandleTypeDef* timer_address_1, U32 channel_0, U32 channel_1){
-	FAN_PWM_Timer_0 = timer_address_0;
-	FAN_PWM_Timer_1 = timer_address_1;
-	FAN_Channel_0 = channel_0;
-	FAN_Channel_1 = channel_1;
-	HAL_TIM_PWM_Start(FAN_PWM_Timer_0, FAN_Channel_0); //turn on PWM generation
-	HAL_TIM_PWM_Start(FAN_PWM_Timer_1, FAN_Channel_1); //turn on PWM generation
+void init_Fans(TIM_HandleTypeDef* timer_address_F, TIM_HandleTypeDef* timer_address_R, U32 channel_F, U32 channel_R){
+	FAN_PWM_Timer_F = timer_address_F;
+	FAN_PWM_Timer_R = timer_address_R;
+	FAN_Channel_F = channel_F;
+	FAN_Channel_R = channel_R;
+	HAL_TIM_PWM_Start(FAN_PWM_Timer_F, FAN_Channel_F); //turn on PWM generation
+	HAL_TIM_PWM_Start(FAN_PWM_Timer_R, FAN_Channel_R); //turn on PWM generation
 }
 
-void update_cooling_simple() {
+void update_cooling_on_off() {
 	//motor_mph = electricalRPM_erpm.data * DRIVE_RATIO;
 	//max temps used for now, can change to by pump and fan if needed
-	float inv_temp = fmaxf(
-    fmaxf(controllerTemp_RL_C.data, controllerTemp_RR_C.data),
-    fmaxf(controllerTemp_FL_C.data, controllerTemp_FR_C.data));
-	float motor_temp = fmaxf(
-    fmaxf(motorTemp_RL_C.data, motorTemp_RR_C.data),
-    fmaxf(motorTemp_FL_C.data, motorTemp_FR_C.data));
+	float inv_temp_front = fmaxf(controllerTemp_RL_C.data, controllerTemp_RR_C.data);
+	float inv_temp_rear = fmaxf(controllerTemp_FL_C.data, controllerTemp_FR_C.data);
+	float motor_temp_front = fmaxf(motorTemp_RL_C.data, motorTemp_RR_C.data);
+	float motor_temp_rear = fmaxf(motorTemp_FL_C.data, motorTemp_FR_C.data);
 
-	if ((inv_temp > INVERTER_PUMP_POWER_ON_THRESH) || (motor_temp > MOTOR_PUMP_THRESH_C)) {
-			digital_pump_0_state = PUMP_DIGITAL_ON;
-			digital_pump_1_state = PUMP_DIGITAL_ON;
-	} else if ((inv_temp < INVERTER_PUMP_POWER_ON_THRESH - COOLING_HYSTERESIS_C) && (motor_temp < MOTOR_PUMP_THRESH_C - COOLING_HYSTERESIS_C)) {
-			digital_pump_0_state = PUMP_DIGITAL_OFF;
-			digital_pump_1_state = PUMP_DIGITAL_OFF;
+	//pump states front
+	if ((inv_temp_front > INVERTER_PUMP_POWER_ON_THRESH) || (motor_temp_front > MOTOR_PUMP_THRESH_C)) {
+			digital_pump_F_state = PUMP_DIGITAL_ON;
+	} else if ((inv_temp_front < INVERTER_PUMP_POWER_ON_THRESH - COOLING_HYSTERESIS_C) && (motor_temp_front < MOTOR_PUMP_THRESH_C - COOLING_HYSTERESIS_C)) {
+			digital_pump_F_state = PUMP_DIGITAL_OFF;
 	}
 
-	//radiator fan
-	if ((inv_temp > INVERTER_FAN_THRESH_C) || (motor_temp > MOTOR_FAN_THRESH_C)) {
-			rad_fan_0_state = RAD_FAN_ON;
-			rad_fan_1_state = RAD_FAN_ON;
-	} else if ((inv_temp < INVERTER_FAN_THRESH_C - COOLING_HYSTERESIS_C) && (motor_temp < MOTOR_FAN_THRESH_C - COOLING_HYSTERESIS_C)) {
-			rad_fan_0_state = RAD_FAN_OFF;
-			rad_fan_1_state = RAD_FAN_OFF;
+	//pump states rear
+	if((inv_temp_rear > INVERTER_PUMP_POWER_ON_THRESH) || (motor_temp_rear > MOTOR_PUMP_THRESH_C)) {
+			digital_pump_R_state = PUMP_DIGITAL_ON;
+	} else if ((inv_temp_rear < INVERTER_PUMP_POWER_ON_THRESH - COOLING_HYSTERESIS_C) && (motor_temp_rear < MOTOR_PUMP_THRESH_C - COOLING_HYSTERESIS_C)) {
+			digital_pump_R_state = PUMP_DIGITAL_OFF;
 	}
 
-	HAL_GPIO_WritePin(PUMP_PWM_1_GPIO_Port, PUMP_PWM_1_Pin, digital_pump_0_state);
-	HAL_GPIO_WritePin(PUMP_PWM_2_GPIO_Port, PUMP_PWM_2_Pin, digital_pump_1_state);
-	HAL_GPIO_WritePin(FAN_PWM_1_GPIO_Port, FAN_PWM_1_Pin, rad_fan_0_state);
-	HAL_GPIO_WritePin(FAN_PWM_2_GPIO_Port, FAN_PWM_1_Pin, rad_fan_1_state);
+	//radiator fan front
+	if ((inv_temp_front > INVERTER_FAN_THRESH_C) || (motor_temp_front > MOTOR_FAN_THRESH_C)) {
+			rad_fan_F_state = RAD_FAN_ON;
+	} else if ((inv_temp_front < INVERTER_FAN_THRESH_C - COOLING_HYSTERESIS_C) && (motor_temp_front < MOTOR_FAN_THRESH_C - COOLING_HYSTERESIS_C)) {
+			rad_fan_F_state = RAD_FAN_OFF;
+	}
+
+	//radiator fan rear
+	if ((inv_temp_rear > INVERTER_FAN_THRESH_C) || (motor_temp_rear > MOTOR_FAN_THRESH_C)) {
+			rad_fan_R_state = RAD_FAN_ON;
+	} else if ((inv_temp_rear < INVERTER_FAN_THRESH_C - COOLING_HYSTERESIS_C) && (motor_temp_rear < MOTOR_FAN_THRESH_C - COOLING_HYSTERESIS_C)) {
+			rad_fan_R_state = RAD_FAN_OFF;
+	}
+
+	HAL_GPIO_WritePin(PUMP_PWM_1_GPIO_Port, PUMP_PWM_1_Pin, digital_pump_F_state);
+	HAL_GPIO_WritePin(PUMP_PWM_2_GPIO_Port, PUMP_PWM_2_Pin, digital_pump_R_state);
+	HAL_GPIO_WritePin(FAN_PWM_1_GPIO_Port, FAN_PWM_1_Pin, rad_fan_F_state);
+	HAL_GPIO_WritePin(FAN_PWM_2_GPIO_Port, FAN_PWM_2_Pin, rad_fan_R_state);
 }
 
-void update_cooling_dynamic(){
-	/*
-	/ figure out correct pump and fan frequency, configure pwm drivers to hit that frequency and be 
-	/ able to set a custom fan/pump threshold
-	/
-	/ use P control when temperature goes above a certain threshold to get back down to that threshold
-	/
-	/ set saturation limits for the output so that we can't command like "-10%" or "110%"
-	*/
+void update_cooling_dynamic() {
+	//simple hysteresis control for fans and pumps
+	//motor_mph = electricalRPM_erpm.data * DRIVE_RATIO;
 	//max temps used for now, can change to by pump and fan if needed
-	float inv_temp = fmaxf(
-    fmaxf(controllerTemp_RL_C.data, controllerTemp_RR_C.data),
-    fmaxf(controllerTemp_FL_C.data, controllerTemp_FR_C.data));
-	float motor_temp = fmaxf(
-    fmaxf(motorTemp_RL_C.data, motorTemp_RR_C.data),
-    fmaxf(motorTemp_FL_C.data, motorTemp_FR_C.data));
+	float inv_temp_front = fmaxf(controllerTemp_RL_C.data, controllerTemp_RR_C.data);
+	float inv_temp_rear = fmaxf(controllerTemp_FL_C.data, controllerTemp_FR_C.data);
+	float motor_temp_front = fmaxf(motorTemp_RL_C.data, motorTemp_RR_C.data);
+	float motor_temp_rear = fmaxf(motorTemp_FL_C.data, motorTemp_FR_C.data);
 
-	float pump_percent;
-	float fan_percent;
+	float above_temp_front = fmaxf(inv_temp_front - INVERTER_FAN_THRESH_C, motor_temp_front - MOTOR_FAN_THRESH_C);
+	float above_temp_rear = fmaxf(inv_temp_rear - INVERTER_FAN_THRESH_C, motor_temp_rear - MOTOR_FAN_THRESH_C);
 
-    //PI variables
-    U32 last_on = 0;
-    float integral_error = 0;
-    float total_error = 0;
+	//pump states front
+	if (above_temp_front > 0) {
+			digital_pump_F_state = PUMP_DIGITAL_ON;
+	} else if (above_temp_front + COOLING_HYSTERESIS_C < 0) {
+			digital_pump_F_state = PUMP_DIGITAL_OFF;
+	}
 
-	//determine if pump should be on, and what its percent should be with PI loop
-    float error_inv = inv_temp - INVERTER_FAN_THRESH_C;
-    float error_motor = motor_temp - MOTOR_FAN_THRESH_C;
-    if (error_inv > 0 || error_motor > 0) {
-        //if either temperature is above threshold, turn on fan and calculate percent
-        total_error = error_inv + error_motor;
-        if(K_Porportional * total_error > 100){
-            integral_error = 0;             //prevents early integral windup
-        } else {
-            integral_error += total_error;              //update integral error
-        }
+	//pump states rear
+	if (above_temp_rear > 0) {
+			digital_pump_R_state = PUMP_DIGITAL_ON;
+	} else if (above_temp_rear + COOLING_HYSTERESIS_C < 0) {
+			digital_pump_R_state = PUMP_DIGITAL_OFF;
+	}
 
-        fan_percent = K_Porportional * total_error;     //percent is proportional term
-        fan_percent += K_Integral * integral_error;     //add integral term
-        pump_percent = fan_percent * (MOTOR_FAN_THRESH_C/MOTOR_PUMP_THRESH_C);
-        if (fan_percent > FAN_MAX_PERCENT) {
-            fan_percent = FAN_MAX_PERCENT;
-            pump_percent = PUMP_100_PERCENT;
-        } else if (fan_percent < FAN_MIN_PERCENT) {
-            fan_percent = FAN_MIN_PERCENT;
-        }
-        if(pump_percent > PUMP_100_PERCENT){
-            pump_percent = PUMP_100_PERCENT;
-        } else if (pump_percent < PUMP_OFF){
-            pump_percent = PUMP_OFF;
-        }
-    } 
-    else {
-        //if temps are below, turn off cooling after a delay
-        if(HAL_GetTick() - last_on > COOLING_OFF_DELAY_MS){
-            fan_percent = FAN_OFF;
-            pump_percent = PUMP_OFF;
-        }
-    }
+	//radiator fan front
+	if (above_temp_front > 0) {
+			rad_fan_F_state = FAN_PERCENT_LINEAR * above_temp_front;
+	} else if (above_temp_front + COOLING_HYSTERESIS_C < 0) {
+			rad_fan_F_state = RAD_FAN_OFF;
+	}
 
-    //updates pwm signals
-    update_pwm(PUMP_PWM_Timer_0, PUMP_Channel_0, pump_percent);
-    update_pwm(PUMP_PWM_Timer_1, PUMP_Channel_1, pump_percent);
-    update_pwm(FAN_PWM_Timer_0, FAN_Channel_0, fan_percent);
-    update_pwm(FAN_PWM_Timer_1, FAN_Channel_1, fan_percent);
-}
+	//radiator fan rear
+	if (above_temp_rear > 0) {
+			rad_fan_R_state = FAN_PERCENT_LINEAR * above_temp_rear;
+	} else if (above_temp_rear + COOLING_HYSTERESIS_C < 0) {
+			rad_fan_R_state = RAD_FAN_OFF;
+	}
 
-void update_pwm(TIM_HandleTypeDef* timer_address, U32 channel, float percent) {
-    //changes DUT to desired percent
-	int DUT = (int) percent;
-	__HAL_TIM_SET_COMPARE(timer_address, channel, DUT);
+	if(rad_fan_F_state > FAN_MAX_PERCENT){
+		rad_fan_F_state = FAN_MAX_PERCENT;
+	}
+	if(rad_fan_R_state > FAN_MAX_PERCENT){
+		rad_fan_R_state = FAN_MAX_PERCENT;
+	}
+
+	HAL_GPIO_WritePin(PUMP_PWM_1_GPIO_Port, PUMP_PWM_1_Pin, digital_pump_F_state);
+	HAL_GPIO_WritePin(PUMP_PWM_2_GPIO_Port, PUMP_PWM_2_Pin, digital_pump_R_state);
+	HAL_GPIO_WritePin(FAN_PWM_1_GPIO_Port, FAN_PWM_1_Pin, rad_fan_F_state);
+	HAL_GPIO_WritePin(FAN_PWM_2_GPIO_Port, FAN_PWM_2_Pin, rad_fan_R_state);
 }

@@ -15,16 +15,12 @@ buckets:
                 ADC: NON_ADC
                 sensor: NON_ADC
                 samples_buffered: 1
-            rvcRadWaterTempIn_C:
-                ADC: ADC1_IN11
-                sensor: temp_sensor
-                samples_buffered: 1
-            rvcShockPosRearLeft_mm: #Volt Sense 3
-                ADC: ADC1_IN0
+            rvcShockPosRearLeft_mm: #Using Aux 5V 1, PC2
+                ADC: ADC1_IN12
                 sensor: linear_pos_sensor_50
                 samples_buffered: 1
-            rvcShockPosRearRight_mm: #Volt Sense 4
-                ADC: ADC1_IN5
+            rvcShockPosRearRight_mm: #Using Aux 5V 2, PC3
+                ADC: ADC1_IN13
                 sensor: linear_pos_sensor_50
                 samples_buffered: 1
 
@@ -92,22 +88,17 @@ buckets:
                 sensor: NON_ADC
                 samples_buffered: 1
             
-            # Misc Sensor Readings
-            rvcBrakeTempRearLeft_C: #Volt Sense 1
+            rvcBrakeTempRearLeft_C: # Not working on Rev1
                 ADC: ADC1_IN15
                 sensor: brake_temp_sensor
                 samples_buffered: 1
-            rvcBrakeTempRearRight_C: #Volt Sense 2
+            rvcBrakeTempRearRight_C: # Not working on Rev1
                 ADC: ADC1_IN6
                 sensor: brake_temp_sensor
                 samples_buffered: 1
             rvcRearRideHeight_mm:
                 ADC: ADC1_IN9
                 sensor: full_raw_voltage_sensor # TODO make ride height sensor in gophersense
-                samples_buffered: 1
-            rvcRadWaterTempOut_C:
-                ADC: ADC1_IN10
-                sensor: temp_sensor
                 samples_buffered: 1
             rvcCurrentSensorLow_A:
                 ADC: ADC1_IN8
@@ -120,4 +111,20 @@ buckets:
             rvcCurrentSensorStatus_state:
                 ADC: NON_ADC
                 sensor: NON_ADC
+                samples_buffered: 1
+            rvcEfuse5V1Fault_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            rvcEfuse5V2Fault_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            rvcEfuse12VFault_state:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            rvcEfuse12VCurrent_A:
+                ADC: ADC1_IN7
+                sensor: rvc_efuse12V_LightPanel_current_reading
                 samples_buffered: 1

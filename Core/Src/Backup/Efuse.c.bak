@@ -1,0 +1,190 @@
+#include "EFuse.h"
+
+// Efuse Variables
+uint8_t SNS_5V_1_FLT;
+uint8_t SNS_5V_2_FLT;
+uint8_t SNS_12V_FLT;
+
+//5V Efuse setup
+RVC_LOW_POWER_CHANNEL SNS1_5V_Chan = {
+	.enable_gpio = {
+		.port = SNS_5V_1_EN_GPIO_Port,
+		.pin  = SNS_5V_1_EN_Pin
+	},
+    .fault_gpio = {
+		.port = SNS_5V_1_FLT_GPIO_Port,
+		.pin  = SNS_5V_1_FLT_Pin
+	},
+    .fault_LED_gpio = {
+		.port = FLT_5V_1_LED_GPIO_Port,
+		.pin  = FLT_5V_1_LED_Pin
+	},
+    .mode = NORMAL,
+	.enabled = FALSE,
+	.hardware_state = LOW_POW_EFUSE_NO_FLT,
+    .flt_state = FALSE,     
+	.trip_start_ms = 0,
+    .retry_delay_ms = EFUSE_RETRY_DELAY_ms,
+	.retries_left = TOTAL_EFUSE_RETRIES
+};
+
+RVC_LOW_POWER_CHANNEL SNS2_5V_Chan = {
+	.enable_gpio = {
+		.port = SNS_5V_2_EN_GPIO_Port,
+		.pin  = SNS_5V_2_EN_Pin
+	},
+    .fault_gpio = {
+		.port = SNS_5V_2_FLT_GPIO_Port,
+		.pin  = SNS_5V_2_FLT_Pin
+	},
+    .fault_LED_gpio = {
+		.port = FLT_5V_2_LED_GPIO_Port,
+		.pin  = FLT_5V_2_LED_Pin
+	},
+    .mode = NORMAL,
+	.enabled = FALSE,
+	.hardware_state = LOW_POW_EFUSE_NO_FLT,
+    .flt_state = FALSE,     
+	.trip_start_ms = 0,
+    .retry_delay_ms = EFUSE_RETRY_DELAY_ms,
+	.retries_left = TOTAL_EFUSE_RETRIES
+};
+
+RVC_LOW_POWER_CHANNEL* RVC_LOW_POWER_CHANNELS[] = {
+    &SNS1_5V_Chan,
+    &SNS2_5V_Chan,
+};
+
+//12V Efuse setup
+RVC_HIGH_POWER_CHANNEL SNS_12V_Chan = {
+	.enable_gpio = {
+		.port = SNS_12V_EN_GPIO_Port,
+		.pin  = SNS_12V_EN_Pin
+	},
+    .fault_gpio = {
+		.port = SNS_12V_FLT_GPIO_Port,
+		.pin  = SNS_12V_FLT_Pin
+	},
+    .fault_LED_gpio = {
+		.port = FLT_12V_LED_GPIO_Port,
+		.pin  = FLT_12V_LED_Pin
+	},
+    .mode = NORMAL,
+	.enabled = FALSE,
+	.hardware_state = HIGH_POW_EFUSE_NO_FLT,
+    .flt_state = FALSE,     
+	.trip_start_ms = 0,
+    .retry_delay_ms = EFUSE_RETRY_DELAY_ms,
+	.retries_left = TOTAL_EFUSE_RETRIES,
+	.amp_max 	  = RVC_12V_CURRENT_LIMIT_A,
+	.amp_can_param	  = &rvc12VCurrent_A
+};
+
+RVC_HIGH_POWER_CHANNEL* RVC_HIGH_POWER_CHANNELS[] = {
+    &SNS_12V_Chan,
+};
+
+// ======================================= Efuse Faults ======================================
+void init_efuses(){
+	for(int i = 0; i < NUM_OF_LOW_POWER_CHANNELS;  i++){
+		RVC_LOW_POWER_CHANNEL *efuse = RVC_LOW_POWER_CHANNELS[i];
+		HAL_GPIO_WritePin(efuse->enable_gpio.port, efuse->enable_gpio.pin, LOW_POW_EFUSE_ENABLED);
+		efuse->enabled = TRUE;
+	}
+
+	// High Power
+	for(int i = 0; i < NUM_OF_HIGH_POWER_CHANNELS;  i++){
+		RVC_HIGH_POWER_CHANNEL *efuse = RVC_HIGH_POWER_CHANNELS[i];
+		HAL_GPIO_WritePin(efuse->enable_gpio.port, efuse->enable_gpio.pin, HIGH_POW_EFUSE_ENABLED);
+		efuse->enabled = TRUE;
+	}
+}
+
+void update_low_power_efuses(){
+	for(int i = 0; i < NUM_OF_LOW_POWER_CHANNELS;  i++){
+		bool ready_to_retry;
+		bool retries_left;
+		RVC_LOW_POWER_CHANNEL *efuse = RVC_LOW_POWER_CHANNELS[i];
+
+		switch(efuse->mode){
+			case NORMAL:
+				if (efuse->hardware_state == LOW_POW_EFUSE_FLT){
+					efuse->flt_state = TRUE;
+					efuse->enabled = FALSE;
+					HAL_GPIO_WritePin(efuse->enable_gpio.port, efuse->enable_gpio.pin, LOW_POW_EFUSE_DISABLED);
+					HAL_GPIO_WritePin(efuse->fault_LED_gpio.port, efuse->fault_LED_gpio.pin, HIGH_POW_EFUSE_ENABLED);
+					efuse->trip_start_ms = HAL_GetTick();
+					efuse->mode = TRIPPED; 
+				}
+				break;
+			case TRIPPED:
+				ready_to_retry = (HAL_GetTick() - efuse->trip_start_ms) > efuse->retry_delay_ms;
+				retries_left = efuse->retries_left > 0;
+				if(!retries_left){
+					efuse->mode = SHUTDOWN; 
+				}
+				else if (ready_to_retry){
+					efuse->flt_state = FALSE;
+					efuse->enabled = TRUE;
+					HAL_GPIO_WritePin(efuse->enable_gpio.port, efuse->enable_gpio.pin, LOW_POW_EFUSE_ENABLED);
+					HAL_GPIO_WritePin(efuse->fault_LED_gpio.port, efuse->fault_LED_gpio.pin, HIGH_POW_EFUSE_DISABLED);
+					efuse->retries_left--;
+					efuse->mode = NORMAL;
+				}
+				break;
+			default:
+			case SHUTDOWN:
+				// fuse is permanently open for this power cycle
+				break;	
+		}
+	}
+}
+
+void update_high_power_efuses(){
+	for(int i = 0; i < NUM_OF_HIGH_POWER_CHANNELS;  i++){
+		bool ready_to_retry;
+		bool retries_left;
+		RVC_HIGH_POWER_CHANNEL *efuse = RVC_HIGH_POWER_CHANNELS[i];
+
+		switch(efuse->mode){
+			case NORMAL:
+				// thermal shutdown
+				if (efuse->hardware_state == HIGH_POW_EFUSE_FLT){
+					efuse->flt_state = TRUE;
+					efuse->enabled = FALSE;
+					efuse->retries_left = 0;
+					HAL_GPIO_WritePin(efuse->enable_gpio.port, efuse->enable_gpio.pin, HIGH_POW_EFUSE_DISABLED);
+					HAL_GPIO_WritePin(efuse->fault_LED_gpio.port, efuse->fault_LED_gpio.pin, HIGH_POW_EFUSE_ENABLED);
+					efuse->mode = SHUTDOWN;
+				}
+				else if (efuse->amp_can_param->data > efuse->amp_max){
+					efuse->flt_state = TRUE;
+					efuse->enabled = FALSE;
+					HAL_GPIO_WritePin(efuse->enable_gpio.port, efuse->enable_gpio.pin, HIGH_POW_EFUSE_DISABLED);
+					HAL_GPIO_WritePin(efuse->fault_LED_gpio.port, efuse->fault_LED_gpio.pin, HIGH_POW_EFUSE_ENABLED);
+					efuse->trip_start_ms = HAL_GetTick();
+					efuse->mode = TRIPPED; 
+				}
+				break;
+			case TRIPPED:
+				ready_to_retry = (HAL_GetTick() - efuse->trip_start_ms) > efuse->retry_delay_ms;
+				retries_left = efuse->retries_left > 0;
+				if(!retries_left){
+					efuse->mode = SHUTDOWN; 
+				}
+				else if (ready_to_retry){
+					efuse->flt_state = FALSE;
+					efuse->enabled = TRUE;
+					HAL_GPIO_WritePin(efuse->enable_gpio.port, efuse->enable_gpio.pin, HIGH_POW_EFUSE_ENABLED);
+					HAL_GPIO_WritePin(efuse->fault_LED_gpio.port, efuse->fault_LED_gpio.pin, HIGH_POW_EFUSE_DISABLED);
+					efuse->retries_left--;
+					efuse->mode = NORMAL;
+				}
+				break;
+			default:
+			case SHUTDOWN:
+				// fuse is permanently open for this power cycle
+				break;	
+		}
+	}
+}

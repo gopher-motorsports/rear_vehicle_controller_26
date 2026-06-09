@@ -14,7 +14,8 @@
 
 //#define temperature thresholds
 #define INVERTER_FAN_THRESH_C    50.0f  // Inverter temperature at which the cooling system turns on
-#define MOTOR_FAN_THRESH_C       50.0f  // Motor temperature at which the cooling system turns on
+#define MOTOR_FAN_THRESH_C       70.0f  // Motor temperature at which the cooling system turns on
+#define MOTOR_MAX_THRESH_C       120.0f // Motor temperature at which the cooling system is at max power
 #define COOLING_HYSTERESIS_C     5.0f   // Hysteresis when confined to digital signal (on/off)
 #define CAR_SPEED_FAN_HYS	     5.0f   // Hysteresis on Car speed for turning on/off fans
 #define CAR_SPEED_FAN_THRESH	 20.0f  // Car speed at which air cooling from movement is enough
@@ -22,6 +23,7 @@
 #define FAN_OFF                 0       //0% duty cycle --> 0/49999
 #define FAN_MIN_PERCENT         25      //Minimum fan speed (25% DUT ~2500rpm)
 #define FAN_MAX_PERCENT         100     //Maximum fan speed (100% DUT ~6400rpm)
+#define FAN_PERCENT_LINEAR      5       //Percent per degree C for linear fan speed 
 #define FAN_PWM_FREQ            25000   //recommended PWM frequency
 //#define USING_PUMP_PWM
 #define PUMP_OFF            0     //0% duty cycle --> 0/49999
