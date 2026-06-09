@@ -70,7 +70,7 @@ void main_loop()
 	update_telemetry_params();
 	update_bspd_params();
 	update_brakelight_and_buzzer();
-
+	update_cooling_dynamic();
 	// LEDs
 	update_TSSI_LED();
 	hbeat_blink();
