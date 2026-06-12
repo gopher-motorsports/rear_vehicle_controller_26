@@ -26,7 +26,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "rvc.h"
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -132,7 +131,7 @@ void task_MainTask(void const * argument)
   for(;;)
   {
     main_loop();
-    osDelay(10);
+    osDelay(1);
   }
   /* USER CODE END task_MainTask */
 }

@@ -40,8 +40,9 @@ void init_rvc(CAN_HandleTypeDef* hcan_ptr)
 	{
 		
 	}
+	// left is front, right is rear for both fans and pumps
 	init_Fans(&htim2, &htim2, TIM_CHANNEL_1, TIM_CHANNEL_2);
-	init_Pumps(&htim3, &htim3, TIM_CHANNEL_1, TIM_CHANNEL_2);
+	init_Pumps(&htim3, &htim3, TIM_CHANNEL_2, TIM_CHANNEL_1);
 	init_efuses();
 }
 
@@ -125,6 +126,10 @@ void update_telemetry_params(){
 	update_and_queue_param_u8(&rvcVehicleBuzzerOn_state, vehicle_buzzer_on);
 	update_and_queue_param_float(&rvcBrakeBias_percent, brake_bias_percent);
 	update_and_queue_param_u8(&rvcDrsEnabled_state, drs_state);
+
+	//Current Sensing
+	update_and_queue_param_float(&rvcCurrentSensor_A, getTractiveSystemCurrent());
+
 }
 
 

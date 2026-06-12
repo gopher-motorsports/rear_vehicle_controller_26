@@ -3,6 +3,7 @@
 // one that turns uses PWM togive variable fan & pump speed with P control (might need a helper function for this)
 //Cooling variables
 #include "cooling.h"
+#include <stdint.h>
 
 //Fan
 U8 rad_fan_F_state = RAD_FAN_OFF;
@@ -50,10 +51,10 @@ void init_Fans(TIM_HandleTypeDef* timer_address_F, TIM_HandleTypeDef* timer_addr
 void update_cooling_on_off() {
 	//motor_mph = electricalRPM_erpm.data * DRIVE_RATIO;
 	//max temps used for now, can change to by pump and fan if needed
-	float inv_temp_front = fmaxf(controllerTemp_RL_C.data, controllerTemp_RR_C.data);
-	float inv_temp_rear = fmaxf(controllerTemp_FL_C.data, controllerTemp_FR_C.data);
-	float motor_temp_front = fmaxf(motorTemp_RL_C.data, motorTemp_RR_C.data);
-	float motor_temp_rear = fmaxf(motorTemp_FL_C.data, motorTemp_FR_C.data);
+	float inv_temp_front = get_max_temp(controllerTemp_RL_C.data, controllerTemp_RR_C.data);
+	float inv_temp_rear = get_max_temp(controllerTemp_FL_C.data, controllerTemp_FR_C.data);
+	float motor_temp_front = get_max_temp(motorTemp_RL_C.data, motorTemp_RR_C.data);
+	float motor_temp_rear = get_max_temp(motorTemp_FL_C.data, motorTemp_FR_C.data);
 
 	//pump states front
 	if ((inv_temp_front > INVERTER_PUMP_POWER_ON_THRESH) || (motor_temp_front > MOTOR_PUMP_THRESH_C)) {
@@ -93,13 +94,17 @@ void update_cooling_dynamic() {
 	//simple hysteresis control for fans and pumps
 	//motor_mph = electricalRPM_erpm.data * DRIVE_RATIO;
 	//max temps used for now, can change to by pump and fan if needed
-	float inv_temp_front = fmaxf(controllerTemp_RL_C.data, controllerTemp_RR_C.data);
-	float inv_temp_rear = fmaxf(controllerTemp_FL_C.data, controllerTemp_FR_C.data);
-	float motor_temp_front = fmaxf(motorTemp_RL_C.data, motorTemp_RR_C.data);
-	float motor_temp_rear = fmaxf(motorTemp_FL_C.data, motorTemp_FR_C.data);
+	float test_value = 55;
+	float test_value_3 = 75;
+	float test_value_2 = 0;
 
-	float above_temp_front = fmaxf(inv_temp_front - INVERTER_FAN_THRESH_C, motor_temp_front - MOTOR_FAN_THRESH_C);
-	float above_temp_rear = fmaxf(inv_temp_rear - INVERTER_FAN_THRESH_C, motor_temp_rear - MOTOR_FAN_THRESH_C);
+	float inv_temp_rear = get_max_temp(controllerTemp_RL_C.data, controllerTemp_RR_C.data);
+	float inv_temp_front = get_max_temp(controllerTemp_FL_C.data, controllerTemp_FR_C.data);
+	float motor_temp_rear = get_max_temp(motorTemp_RL_C.data, motorTemp_RR_C.data);
+	float motor_temp_front = get_max_temp(motorTemp_FL_C.data, motorTemp_FR_C.data);
+
+	float above_temp_front = get_max_temp((inv_temp_front - INVERTER_FAN_THRESH_C), (motor_temp_front - MOTOR_FAN_THRESH_C));
+	float above_temp_rear = get_max_temp((inv_temp_rear - INVERTER_FAN_THRESH_C), (motor_temp_rear - MOTOR_FAN_THRESH_C));
 
 	//pump states front
 	if (above_temp_front > 0) {
@@ -119,14 +124,14 @@ void update_cooling_dynamic() {
 	if (above_temp_front > 0) {
 			rad_fan_F_state = FAN_PERCENT_LINEAR * above_temp_front;
 	} else if (above_temp_front + COOLING_HYSTERESIS_C < 0) {
-			rad_fan_F_state = RAD_FAN_OFF;
+			rad_fan_F_state = FAN_OFF;
 	}
 
 	//radiator fan rear
 	if (above_temp_rear > 0) {
 			rad_fan_R_state = FAN_PERCENT_LINEAR * above_temp_rear;
 	} else if (above_temp_rear + COOLING_HYSTERESIS_C < 0) {
-			rad_fan_R_state = RAD_FAN_OFF;
+			rad_fan_R_state = FAN_OFF; 
 	}
 
 	if(rad_fan_F_state > FAN_MAX_PERCENT){
@@ -138,6 +143,27 @@ void update_cooling_dynamic() {
 
 	HAL_GPIO_WritePin(PUMP_PWM_1_GPIO_Port, PUMP_PWM_1_Pin, digital_pump_F_state);
 	HAL_GPIO_WritePin(PUMP_PWM_2_GPIO_Port, PUMP_PWM_2_Pin, digital_pump_R_state);
-	HAL_GPIO_WritePin(FAN_PWM_1_GPIO_Port, FAN_PWM_1_Pin, rad_fan_F_state);
-	HAL_GPIO_WritePin(FAN_PWM_2_GPIO_Port, FAN_PWM_2_Pin, rad_fan_R_state);
+	set_pwm_percent(FAN_PWM_Timer_F, FAN_Channel_F, rad_fan_F_state);
+    set_pwm_percent(FAN_PWM_Timer_R, FAN_Channel_R, rad_fan_R_state);
+}
+
+float get_max_temp(float temp1, float temp2){
+	if(temp1 > temp2){
+		return temp1;
+	}
+	else{
+		return temp2;
+	}
+}
+
+
+void set_pwm_percent(TIM_HandleTypeDef *htim, uint32_t channel, float percent) {
+    if (percent < 0.0f)   percent = 0.0f;
+    if (percent > 100.0f) percent = 100.0f;
+
+    uint32_t period = __HAL_TIM_GET_AUTORELOAD(htim); // reads ARR
+	//inverted because pull down mosfet
+    uint32_t pulse  = (uint32_t)(((100-percent) / 100.0f) * (float)(65535 + 1));
+
+    __HAL_TIM_SET_COMPARE(htim, channel, pulse);
 }

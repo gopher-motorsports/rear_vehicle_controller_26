@@ -11,8 +11,8 @@
 
 
 // ====================================== PULLUP PARAMETERS =====================================
-#define RAD_FAN_ON (GPIO_PIN_SET)
-#define RAD_FAN_OFF (GPIO_PIN_RESET)
+#define RAD_FAN_ON (GPIO_PIN_RESET)
+#define RAD_FAN_OFF (GPIO_PIN_SET)
 #define PUMP_DIGITAL_ON (GPIO_PIN_SET)
 #define PUMP_DIGITAL_OFF (GPIO_PIN_RESET)
 // ==============================================================================================
@@ -54,3 +54,5 @@ void update_cooling_dynamic();  // Control loop for cooling
 void update_pwm(TIM_HandleTypeDef* timer_address, U32 channel, float percent);
 void init_Pumps(TIM_HandleTypeDef* timer_address_0, TIM_HandleTypeDef* timer_address_1, U32 channel_0, U32 channel_1);
 void init_Fans(TIM_HandleTypeDef* timer_address_0, TIM_HandleTypeDef* timer_address_1, U32 channel_0, U32 channel_1);
+void set_pwm_percent(TIM_HandleTypeDef *htim, uint32_t channel, float percent);
+float get_max_temp(float temp1, float temp2);
