@@ -10,8 +10,6 @@ uint8_t sdc_break_point_tripped = 0;
 uint8_t efuse5_1_fault = 0;
 uint8_t efuse5_2_fault = 0;
 uint8_t efuse12V_fault = 0;
-uint8_t brake_light_on = 0;
-uint8_t vehicle_buzzer_on = 0;
 float brake_bias_percent = 0;
 uint8_t drs_state = 0;
 

@@ -41,7 +41,7 @@ void init_rvc(CAN_HandleTypeDef* hcan_ptr)
 		
 	}
 	// left is front, right is rear for both fans and pumps
-	init_Fans(&htim2, &htim2, TIM_CHANNEL_2, TIM_CHANNEL_1);
+	init_Fans(&htim2, &htim2, TIM_CHANNEL_1, TIM_CHANNEL_2);
 	init_Pumps(&htim3, &htim3, TIM_CHANNEL_2, TIM_CHANNEL_1);
 	init_efuses();
 }
