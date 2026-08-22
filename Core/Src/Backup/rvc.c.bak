@@ -32,6 +32,8 @@ void init_rvc(CAN_HandleTypeDef* hcan_ptr)
 	init_Fans(&htim2, &htim2, TIM_CHANNEL_1, TIM_CHANNEL_2);
 	init_Pumps(&htim3, &htim3, TIM_CHANNEL_1, TIM_CHANNEL_2);
 
+	init_DRS_servo(&htim4, TIM_CHANNEL_1);
+
 	// Set the function pointer of SET_LED_STATE. This means the function change_led_state()
 	// will be run whenever this can command is sent to the module
 	attach_callback_cmd(SET_LED_STATE, &change_led_state);

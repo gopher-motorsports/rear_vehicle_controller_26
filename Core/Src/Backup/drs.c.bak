@@ -1,0 +1,70 @@
+// TODO: Port over RVC 2025 Code
+// Fortify the DRS shutoff conditons reached to include both steering angle & brake
+/*
+ * drs.c
+ *
+ *  Created on: Mar 21, 2024
+ *      Author: chris
+ */
+#include "drs.h"
+#include "main.h"
+#include "rvc.h"
+
+TIM_HandleTypeDef* DRS_Timer;
+U32 DRS_Channel;
+int rot_dial_timer_val = 0; //keeping this in here if we want to use rotary dial
+U8 drs_button_state;
+
+//local function prototypes
+bool drs_shutoff_conditions_reached();
+
+//DRS brake thresholds
+typedef enum {
+	DRS_BRAKE_NORMAL = 0,
+	DRS_BRAKE_TRIPPED = 1
+} DRS_BRAKE_STATES;
+
+void init_DRS_servo(TIM_HandleTypeDef* timer_address, U32 channel){
+	DRS_Timer = timer_address;
+	DRS_Channel = channel;
+	HAL_TIM_PWM_Start(DRS_Timer, DRS_Channel); //turn on PWM generation
+}
+
+void set_DRS_Servo_Position(){
+	//duty cycle lookup table for each DRS position, optional if we are using the rotary dial
+	drs_button_state = swButon2_state.data;
+
+	if(drs_button_state == 1){
+		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, OPEN_POS);
+	}
+	else if(drs_button_pressed == true){
+		__HAL_TIM_SET_COMPARE(DRS_Timer, DRS_Channel, CLOSED_POS);
+	}
+}
+
+bool drs_shutoff_conditions_reached(){
+	static DRS_BRAKE_STATES drs_brake_state = NORMAL;
+	switch (drs_brake_state){
+		case DRS_BRAKE_TRIPPED:
+			//have let off the brakes --> closed to open
+			if(rvcBrakePressureRear_psi.data > BRAKE_SHUTOFF_THRESHOLD - DRS_HYSTERESIS){// ||
+				  drs_brake_state = DRS_BRAKE_NORMAL;
+				  return false;
+		    }
+			return true; //DRS should be closed
+			break;
+		case DRS_BRAKE_NORMAL:
+		default:
+			//have breached DRS threshold --> open to closed
+			if(rvcBrakePressureRear_psi.data > BRAKE_SHUTOFF_THRESHOLD + DRS_HYSTERESIS){// ||
+				  drs_brake_state = DRS_BRAKE_TRIPPED;
+				  return true;
+			}
+			return false; //drs should be open
+			break;
+	}
+
+	//reaches here we are in trouble
+	return false;
+
+}
