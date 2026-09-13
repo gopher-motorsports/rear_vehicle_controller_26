@@ -21,6 +21,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "main.h"
+#include "rvc.h"
 #include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
