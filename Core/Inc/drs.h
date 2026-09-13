@@ -63,5 +63,6 @@ typedef enum
 void init_DRS_servo(TIM_HandleTypeDef* timer_address, U32 channel);
 void set_DRS_Servo_Position_Open(bool set_to_open);
 void set_DRS_Servo_Position_Button();
+void set_DRS_Servo_Position_Toggle();
 void set_DRS_Servo_Position_Auto();
 #endif /* INC_DRS_H_ */
